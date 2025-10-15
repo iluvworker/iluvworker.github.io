@@ -153,134 +153,136 @@
   </main>
 
   <script>
-    // ===== GitHub設定 =====
-    const GITHUB_TOKEN = process.env.TOKEN; // ← Secrets から自動取得
-    const REPO_OWNER = "iluvworker"; // ← 例: "kyontan"
-    const REPO_NAME = "iluvworker.github.io";        // ← 例: "video-manager"
-    const FILE_PATH = "posts.json";
+  // ===== GitHub設定 =====
+  const REPO_OWNER = "iluvworker";
+  const REPO_NAME = "iluvworker.github.io";
+  const FILE_PATH = "posts.json";
 
-    // ===== セクション切替 =====
-    function showSection(id) {
-      document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
-      document.getElementById(id).style.display = 'block';
-      sessionStorage.setItem('lastSection', id);
+  // ===== セクション切替 =====
+  function showSection(id) {
+    document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    sessionStorage.setItem('lastSection', id);
+  }
+
+  window.addEventListener('load', () => {
+    const last = sessionStorage.getItem('lastSection') || 'postFormSection';
+    showSection(last);
+    loadPosts();
+  });
+
+  // ===== 投稿データ読み込み =====
+  let posts = [];
+
+  async function loadPosts() {
+    try {
+      const res = await fetch(`https://${REPO_OWNER}.github.io/posts.json?_=${Date.now()}`);
+      posts = await res.json();
+      renderPosts();
+    } catch (err) {
+      console.error("読み込みエラー:", err);
+      posts = [];
     }
+  }
 
-    window.addEventListener('load', () => {
-      const last = sessionStorage.getItem('lastSection') || 'postFormSection';
-      showSection(last);
-      loadPosts();
+  // ===== 投稿一覧描画 =====
+  const postForm = document.getElementById('postForm');
+  const postTable = document.querySelector('#postTable tbody');
+  const allPostsTable = document.querySelector('#allPostsTable tbody');
+
+  function detectSiteName(url) {
+    const u = (url || '').toLowerCase();
+    if (u.includes('mgstage.com')) return 'MGS';
+    if (u.includes('dmm.co.jp') || u.includes('fanza')) return 'FANZA';
+    return '不明';
+  }
+
+  function normalizePost(p) {
+    if (!p.site) p.site = detectSiteName(p.url || p.fanza);
+    if (!p.url && p.fanza) p.url = p.fanza;
+    return p;
+  }
+
+  function renderPosts() {
+    postTable.innerHTML = "";
+    allPostsTable.innerHTML = "";
+    posts = posts.map(normalizePost);
+    [...posts].reverse().forEach((p, i) => {
+      const siteName = detectSiteName(p.url);
+      const linkHTML = `<a href="${p.url}" target="_blank">${siteName}</a>`;
+      const row = `
+        <tr>
+          <td><img src="${p.thumb}" alt="thumb"></td>
+          <td>${linkHTML}</td>
+          <td><a href="${p.video}" target="_blank">動画</a></td>
+          <td>${p.date || '—'}</td>
+          <td>
+            <button class="action-btn" onclick="editPost(${i})">編集</button>
+            <button class="action-btn delete-btn" onclick="deletePost(${i})">削除</button>
+          </td>
+        </tr>`;
+      postTable.insertAdjacentHTML('beforeend', row);
+      allPostsTable.insertAdjacentHTML('beforeend', row);
     });
+  }
 
-    // ===== 投稿データ読み込み =====
-    let posts = [];
-
-    async function loadPosts() {
-      try {
-        const res = await fetch(`https://${REPO_OWNER}.github.io/${REPO_NAME}/posts.json?_=${Date.now()}`);
-        posts = await res.json();
-        renderPosts();
-      } catch (err) {
-        console.error("読み込みエラー:", err);
-        posts = [];
-      }
-    }
-
-    // ===== 投稿一覧の描画 =====
-    const postForm = document.getElementById('postForm');
-    const postTable = document.querySelector('#postTable tbody');
-    const allPostsTable = document.querySelector('#allPostsTable tbody');
-
-    function detectSiteName(url) {
-      const u = (url || '').toLowerCase();
-      if (u.includes('mgstage.com')) return 'MGS';
-      if (u.includes('dmm.co.jp') || u.includes('fanza')) return 'FANZA';
-      return '不明';
-    }
-
-    function normalizePost(p) {
-      if (!p.site) p.site = detectSiteName(p.url || p.fanza);
-      if (!p.url && p.fanza) p.url = p.fanza;
-      return p;
-    }
-
-    function renderPosts() {
-      postTable.innerHTML = "";
-      allPostsTable.innerHTML = "";
-      posts = posts.map(normalizePost);
-      [...posts].reverse().forEach((p, i) => {
-        const siteName = detectSiteName(p.url);
-        const linkHTML = `<a href="${p.url}" target="_blank">${siteName}</a>`;
-        const row = `
-          <tr>
-            <td><img src="${p.thumb}" alt="thumb"></td>
-            <td>${linkHTML}</td>
-            <td><a href="${p.video}" target="_blank">動画</a></td>
-            <td>${p.date || '—'}</td>
-            <td>
-              <button class="action-btn" onclick="editPost(${i})">編集</button>
-              <button class="action-btn delete-btn" onclick="deletePost(${i})">削除</button>
-            </td>
-          </tr>`;
-        postTable.insertAdjacentHTML('beforeend', row);
-        allPostsTable.insertAdjacentHTML('beforeend', row);
-      });
-    }
-
-    // ===== GitHub更新処理 =====
-    async function updateGitHubPosts(posts) {
-      const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-      const res = await fetch(url, { headers: { Authorization: `token ${GITHUB_TOKEN}` } });
-      const data = await res.json();
-      const content = btoa(unescape(encodeURIComponent(JSON.stringify(posts, null, 2))));
-
-      await fetch(url, {
-        method: "PUT",
+  // ===== ワークフローをトリガー =====
+  async function triggerWorkflow() {
+    try {
+      await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/update-posts.yml/dispatches`, {
+        method: "POST",
         headers: {
-          Authorization: `token ${GITHUB_TOKEN}`,
-          "Content-Type": "application/json",
+          "Accept": "application/vnd.github+json"
         },
-        body: JSON.stringify({
-          message: "update posts",
-          content: content,
-          sha: data.sha,
-        }),
+        body: JSON.stringify({ ref: "main" })
       });
+      console.log("GitHub Actions triggered successfully!");
+    } catch (e) {
+      console.error("ワークフロートリガー失敗:", e);
     }
+  }
 
-    // ===== 新規投稿 =====
-    postForm.addEventListener('submit', async e => {
-      e.preventDefault();
-      const workURL = document.getElementById('workURL').value.trim();
-      const thumbURL = document.getElementById('thumbURL').value.trim();
-      const videoURL = document.getElementById('videoURL').value.trim();
+  // ===== 新規投稿 =====
+  postForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const workURL = document.getElementById('workURL').value.trim();
+    const thumbURL = document.getElementById('thumbURL').value.trim();
+    const videoURL = document.getElementById('videoURL').value.trim();
 
-      const newPost = {
-        site: detectSiteName(workURL),
-        url: workURL,
-        thumb: thumbURL,
-        video: videoURL,
-        date: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
-      };
+    const newPost = {
+      site: detectSiteName(workURL),
+      url: workURL,
+      thumb: thumbURL,
+      video: videoURL,
+      date: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
+    };
 
-      posts.push(newPost);
-      renderPosts();
-      postForm.reset();
-      await updateGitHubPosts(posts);
-      alert("投稿をGitHubに保存しました！");
-    });
+    // JSONに追記
+    posts.push(newPost);
+    renderPosts();
 
-    // ===== 削除 =====
-    async function deletePost(i) {
-      posts.splice(i, 1);
-      renderPosts();
-      await updateGitHubPosts(posts);
-      alert("削除しました！");
-    }
+    // 一時保存
+    localStorage.setItem('pendingPosts', JSON.stringify(posts));
 
-    function editPost(i) {
-      alert(`編集モード（仮）: ${posts[i].url}`);
-    }
-  </script>
+    // GitHub Actions起動
+    await triggerWorkflow();
+
+    alert("投稿データを送信しました。反映まで数分お待ちください。");
+    postForm.reset();
+  });
+
+  // ===== 削除 =====
+  async function deletePost(i) {
+    posts.splice(i, 1);
+    renderPosts();
+    localStorage.setItem('pendingPosts', JSON.stringify(posts));
+    await triggerWorkflow();
+    alert("削除しました（反映まで少し時間がかかります）。");
+  }
+
+  function editPost(i) {
+    alert(`編集モード（仮）: ${posts[i].url}`);
+  }
+</script>
 </body>
 </html>
