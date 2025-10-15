@@ -8,7 +8,33 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Update JSON
-        run: echo "Auto-update complete"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Check for pending updates
+        run: |
+          echo "🔍 posts.json の更新チェック中..."
+          if [ -f posts.json ]; then
+            echo "✅ posts.json が存在します"
+          else
+            echo "⚠ posts.json が見つかりません"
+            exit 1
+          fi
+
+      - name: Commit & Push if changed
+        run: |
+          git add posts.json
+          if git diff --cached --quiet; then
+            echo "🟢 変更なし。スキップします。"
+          else
+            git commit -m "update posts.json via GitHub Actions"
+            git push
+            echo "🚀 posts.json を更新しました。"
+          fi
