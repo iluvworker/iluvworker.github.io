@@ -13,7 +13,6 @@
       background-color: #fff;
       color: #000;
     }
-
     aside {
       width: 200px;
       background: #f5f5f5;
@@ -23,7 +22,6 @@
       gap: 10px;
       border-right: 2px solid #ccc;
     }
-
     aside button {
       background: #e0e0e0;
       color: #000;
@@ -33,35 +31,24 @@
       cursor: pointer;
       text-align: left;
     }
-
-    aside button:hover {
-      background: #d0d0d0;
-    }
-
+    aside button:hover { background: #d0d0d0; }
     main {
       flex: 1;
       padding: 20px;
       overflow-y: auto;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
     }
-
     th, td {
       border-bottom: 1px solid #ccc;
       padding: 10px;
       text-align: left;
       vertical-align: middle;
     }
-
-    img {
-      width: 100px;
-      border-radius: 4px;
-    }
-
+    img { width: 100px; border-radius: 4px; }
     button.action-btn {
       background: #0078d7;
       border: none;
@@ -70,11 +57,7 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
-    button.delete-btn {
-      background: #d9534f;
-    }
-
+    button.delete-btn { background: #d9534f; }
     input {
       width: 100%;
       padding: 8px;
@@ -84,15 +67,8 @@
       background: #fff;
       color: #000;
     }
-
-    h3 {
-      border-left: 4px solid #0078d7;
-      padding-left: 8px;
-    }
-
-    small {
-      color: #666;
-    }
+    h3 { border-left: 4px solid #0078d7; padding-left: 8px; }
+    small { color: #666; }
   </style>
 </head>
 <body>
@@ -108,13 +84,13 @@
       <h3>新規投稿</h3>
       <form id="postForm">
         <label>販売サイトURL（FANZA / MGS）：</label>
-        <input type="url" id="workURL" placeholder="https://www.dmm.co.jp/... または https://www.mgstage.com/..." required />
+        <input type="url" id="workURL" placeholder="https://..." required />
 
         <label>サムネURL：</label>
-        <input type="url" id="thumbURL" placeholder="https://...jpg / .webp" required />
+        <input type="url" id="thumbURL" placeholder="https://..." required />
 
         <label>動画URL：</label>
-        <input type="url" id="videoURL" placeholder="https://...mp4" required />
+        <input type="url" id="videoURL" placeholder="https://..." required />
 
         <button type="submit">登録</button>
       </form>
@@ -152,137 +128,150 @@
     </section>
   </main>
 
-  <script>
-  // ===== GitHub設定 =====
-  const REPO_OWNER = "iluvworker";
-  const REPO_NAME = "iluvworker.github.io";
-  const FILE_PATH = "posts.json";
+<script>
+const REPO_OWNER = "iluvworker";
+const REPO_NAME = "iluvworker.github.io";
+const FILE_PATH = "posts.json";
 
-  // ===== セクション切替 =====
-  function showSection(id) {
-    document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    sessionStorage.setItem('lastSection', id);
+let posts = [];
+
+// ==============================
+// セクション切替
+// ==============================
+function showSection(id) {
+  document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+  sessionStorage.setItem('lastSection', id);
+}
+
+window.addEventListener('load', () => {
+  const last = sessionStorage.getItem('lastSection') || 'postFormSection';
+  showSection(last);
+  initializePosts();
+});
+
+// ==============================
+// データ初期化
+// ==============================
+async function initializePosts() {
+  const localData = localStorage.getItem('pendingPosts');
+  if (localData) {
+    posts = JSON.parse(localData);
+    renderPosts();
   }
+  await loadFromGitHub();
+}
 
-  window.addEventListener('load', () => {
-    const last = sessionStorage.getItem('lastSection') || 'postFormSection';
-    showSection(last);
-    loadPosts();
-  });
-
-  // ===== 投稿データ読み込み =====
-  let posts = [];
-
-  async function loadPosts() {
-    try {
-      const res = await fetch(`https://${REPO_OWNER}.github.io/posts.json?_=${Date.now()}`);
-      posts = await res.json();
+// ==============================
+// GitHubから読み込み
+// ==============================
+async function loadFromGitHub() {
+  try {
+    const res = await fetch(`https://${REPO_OWNER}.github.io/posts.json?_=${Date.now()}`);
+    if (res.ok) {
+      const remoteData = await res.json();
+      // マージ（重複回避）
+      const urls = new Set(posts.map(p => p.url));
+      const merged = [...remoteData, ...posts.filter(p => !urls.has(p.url))];
+      posts = merged;
       renderPosts();
-    } catch (err) {
-      console.error("読み込みエラー:", err);
-      posts = [];
+      localStorage.setItem('pendingPosts', JSON.stringify(posts));
     }
+  } catch (err) {
+    console.warn("GitHubからの読み込みエラー:", err);
   }
+}
 
-  // ===== 投稿一覧描画 =====
-  const postForm = document.getElementById('postForm');
+// ==============================
+// ワークフロー起動
+// ==============================
+async function triggerWorkflow() {
+  try {
+    await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/update-posts.yml/dispatches`, {
+      method: "POST",
+      headers: { "Accept": "application/vnd.github+json" },
+      body: JSON.stringify({ ref: "main" })
+    });
+    console.log("GitHub Actions triggered");
+  } catch (e) {
+    console.error("ワークフロー起動失敗:", e);
+  }
+}
+
+// ==============================
+// 投稿追加
+// ==============================
+document.getElementById('postForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const workURL = workURLInput.value.trim();
+  const thumbURL = thumbURLInput.value.trim();
+  const videoURL = videoURLInput.value.trim();
+
+  const newPost = {
+    site: detectSiteName(workURL),
+    url: workURL,
+    thumb: thumbURL,
+    video: videoURL,
+    date: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
+  };
+
+  posts.push(newPost);
+  renderPosts();
+  localStorage.setItem('pendingPosts', JSON.stringify(posts));
+  await triggerWorkflow();
+
+  alert("投稿データを送信しました。反映まで数分お待ちください。");
+  e.target.reset();
+});
+
+// ==============================
+// 削除機能
+// ==============================
+async function deletePost(i) {
+  if (!confirm("本当に削除しますか？")) return;
+  posts.splice(i, 1);
+  renderPosts();
+  localStorage.setItem('pendingPosts', JSON.stringify(posts));
+  await triggerWorkflow();
+  alert("削除しました（反映まで数分かかります）");
+}
+
+// ==============================
+// 投稿描画
+// ==============================
+function detectSiteName(url) {
+  const u = (url || '').toLowerCase();
+  if (u.includes('mgstage.com')) return 'MGS';
+  if (u.includes('dmm.co.jp') || u.includes('fanza')) return 'FANZA';
+  return '不明';
+}
+
+function renderPosts() {
   const postTable = document.querySelector('#postTable tbody');
   const allPostsTable = document.querySelector('#allPostsTable tbody');
+  postTable.innerHTML = allPostsTable.innerHTML = "";
 
-  function detectSiteName(url) {
-    const u = (url || '').toLowerCase();
-    if (u.includes('mgstage.com')) return 'MGS';
-    if (u.includes('dmm.co.jp') || u.includes('fanza')) return 'FANZA';
-    return '不明';
-  }
-
-  function normalizePost(p) {
-    if (!p.site) p.site = detectSiteName(p.url || p.fanza);
-    if (!p.url && p.fanza) p.url = p.fanza;
-    return p;
-  }
-
-  function renderPosts() {
-    postTable.innerHTML = "";
-    allPostsTable.innerHTML = "";
-    posts = posts.map(normalizePost);
-    [...posts].reverse().forEach((p, i) => {
-      const siteName = detectSiteName(p.url);
-      const linkHTML = `<a href="${p.url}" target="_blank">${siteName}</a>`;
-      const row = `
-        <tr>
-          <td><img src="${p.thumb}" alt="thumb"></td>
-          <td>${linkHTML}</td>
-          <td><a href="${p.video}" target="_blank">動画</a></td>
-          <td>${p.date || '—'}</td>
-          <td>
-            <button class="action-btn" onclick="editPost(${i})">編集</button>
-            <button class="action-btn delete-btn" onclick="deletePost(${i})">削除</button>
-          </td>
-        </tr>`;
-      postTable.insertAdjacentHTML('beforeend', row);
-      allPostsTable.insertAdjacentHTML('beforeend', row);
-    });
-  }
-
-  // ===== ワークフローをトリガー =====
-  async function triggerWorkflow() {
-    try {
-      await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/update-posts.yml/dispatches`, {
-        method: "POST",
-        headers: {
-          "Accept": "application/vnd.github+json"
-        },
-        body: JSON.stringify({ ref: "main" })
-      });
-      console.log("GitHub Actions triggered successfully!");
-    } catch (e) {
-      console.error("ワークフロートリガー失敗:", e);
-    }
-  }
-
-  // ===== 新規投稿 =====
-  postForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    const workURL = document.getElementById('workURL').value.trim();
-    const thumbURL = document.getElementById('thumbURL').value.trim();
-    const videoURL = document.getElementById('videoURL').value.trim();
-
-    const newPost = {
-      site: detectSiteName(workURL),
-      url: workURL,
-      thumb: thumbURL,
-      video: videoURL,
-      date: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
-    };
-
-    // JSONに追記
-    posts.push(newPost);
-    renderPosts();
-
-    // 一時保存
-    localStorage.setItem('pendingPosts', JSON.stringify(posts));
-
-    // GitHub Actions起動
-    await triggerWorkflow();
-
-    alert("投稿データを送信しました。反映まで数分お待ちください。");
-    postForm.reset();
+  posts.slice().reverse().forEach((p, i) => {
+    const site = detectSiteName(p.url);
+    const row = `
+      <tr>
+        <td><img src="${p.thumb}" alt="thumb"></td>
+        <td><a href="${p.url}" target="_blank">${site}</a></td>
+        <td><a href="${p.video}" target="_blank">動画</a></td>
+        <td>${p.date || '—'}</td>
+        <td>
+          <button class="action-btn" onclick="editPost(${i})">編集</button>
+          <button class="action-btn delete-btn" onclick="deletePost(${i})">削除</button>
+        </td>
+      </tr>`;
+    postTable.insertAdjacentHTML('beforeend', row);
+    allPostsTable.insertAdjacentHTML('beforeend', row);
   });
+}
 
-  // ===== 削除 =====
-  async function deletePost(i) {
-    posts.splice(i, 1);
-    renderPosts();
-    localStorage.setItem('pendingPosts', JSON.stringify(posts));
-    await triggerWorkflow();
-    alert("削除しました（反映まで少し時間がかかります）。");
-  }
-
-  function editPost(i) {
-    alert(`編集モード（仮）: ${posts[i].url}`);
-  }
+function editPost(i) {
+  alert(`編集モード（仮）: ${posts[i].url}`);
+}
 </script>
 </body>
 </html>
