@@ -10,11 +10,11 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
     .then((response) => response.json())
     .then((accounts) => {
       // 管理者情報
-      const admin = accounts.admin;
+      const 神 = accounts.admin;
       let success = false;
 
       // 管理者判定
-      if (username === admin.username && password === admin.password) {
+      if (username === tsuvasa283.username && password === stronger.password) {
         success = true;
         window.location.href = "admin.html";
       } else {
