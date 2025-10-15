@@ -1,227 +1,219 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>管理者パネル</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel</title>
   <style>
     body {
-      font-family: "Segoe UI", sans-serif;
-      background-color: #f9fafb;
-      color: #333;
-      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
+      margin: 0;
       height: 100vh;
-    }
-    /* Sidebar */
-    .sidebar {
-      width: 220px;
-      background: #1e293b;
+      background-color: #121212;
       color: #fff;
+    }
+
+    aside {
+      width: 200px;
+      background: #1e1e1e;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      padding: 20px;
+      gap: 10px;
+      border-right: 2px solid #333;
     }
-    .sidebar h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 18px;
-      font-weight: 600;
-    }
-    .sidebar button {
-      background: none;
-      border: none;
+
+    aside button {
+      background: #333;
       color: #fff;
-      text-align: left;
-      padding: 10px 0;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 15px;
-      border-left: 3px solid transparent;
+      text-align: left;
     }
-    .sidebar button.active {
-      border-left: 3px solid #007bff;
-      font-weight: 600;
+
+    aside button:hover {
+      background: #555;
     }
-    .content {
+
+    main {
       flex: 1;
-      padding: 20px 40px;
+      padding: 20px;
       overflow-y: auto;
     }
-    h3 {
-      border-bottom: 2px solid #007bff;
-      padding-bottom: 5px;
-    }
-    form input {
-      width: 100%;
-      padding: 8px;
-      margin: 6px 0 12px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    form button {
-      background-color: #007bff;
-      border: none;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
-      background: white;
-      border-radius: 6px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
+
     th, td {
+      border-bottom: 1px solid #333;
       padding: 10px;
-      border-bottom: 1px solid #eee;
       text-align: left;
     }
-    th {
-      background-color: #f1f5f9;
-    }
-    td img {
-      width: 80px;
+
+    img {
+      width: 100px;
       border-radius: 4px;
     }
-    .action-btn {
-      background: #007bff;
-      color: #fff;
+
+    button.action-btn {
+      background: #0078d7;
       border: none;
+      padding: 6px 10px;
+      color: #fff;
       border-radius: 4px;
-      padding: 5px 10px;
       cursor: pointer;
-      margin-right: 5px;
     }
-    .delete-btn {
-      background: #dc2626;
+
+    button.delete-btn {
+      background: #d9534f;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border: none;
+      background: #222;
+      color: #fff;
+    }
+
+    h3 {
+      border-left: 4px solid #0078d7;
+      padding-left: 8px;
     }
   </style>
 </head>
 <body>
-  <div class="sidebar">
-    <h2>管理メニュー</h2>
-    <button class="tablink active" data-target="post-section">投稿画面</button>
-    <button class="tablink" data-target="list-section">投稿一覧</button>
-    <button class="tablink" data-target="user-section">ユーザー管理</button>
-  </div>
 
-  <div class="content">
+  <aside>
+    <button onclick="showSection('postFormSection')">投稿画面</button>
+    <button onclick="showSection('postListSection')">投稿一覧</button>
+    <button onclick="showSection('userSection')">ユーザー管理</button>
+  </aside>
+
+  <main>
     <!-- 投稿画面 -->
-    <div id="post-section" class="tab active">
+    <section id="postFormSection">
       <h3>新規投稿</h3>
       <form id="postForm">
-        <label>FANZA URL：</label>
-        <input type="url" id="fanzaURL" required />
+        <label>販売サイトURL（FANZA / MGS）：</label>
+        <input type="url" id="workURL" placeholder="https://www.dmm.co.jp/... または https://www.mgstage.com/..." required />
+
         <label>サムネURL：</label>
-        <input type="url" id="thumbURL" required />
+        <input type="url" id="thumbURL" placeholder="https://...jpg / .webp" required />
+
         <label>動画URL：</label>
-        <input type="url" id="videoURL" required />
+        <input type="url" id="videoURL" placeholder="https://...mp4" required />
+
         <button type="submit">登録</button>
       </form>
+    </section>
+
+    <!-- 投稿一覧 -->
+    <section id="postListSection" style="display:none;">
       <h3>投稿一覧</h3>
       <table id="postTable">
         <thead>
           <tr>
+            <th>サイト</th>
             <th>サムネ</th>
-            <th>FANZA</th>
+            <th>作品URL</th>
             <th>動画</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
-    </div>
-
-    <!-- 投稿一覧 -->
-    <div id="list-section" class="tab" style="display:none;">
-      <h3>投稿一覧</h3>
-      <table id="allPostsTable">
-        <thead>
-          <tr>
-            <th>サムネ</th>
-            <th>FANZA</th>
-            <th>動画</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+    </section>
 
     <!-- ユーザー管理 -->
-    <div id="user-section" class="tab" style="display:none;">
+    <section id="userSection" style="display:none;">
       <h3>ユーザー管理</h3>
       <form id="userForm">
-        <label>表示名：</label>
-        <input type="text" id="userName" required />
-        <label>ID：</label>
-        <input type="text" id="userID" required />
-        <label>パスワード：</label>
-        <input type="password" id="userPW" required />
-        <button type="submit">追加</button>
+        <input type="text" id="username" placeholder="ユーザー名" required />
+        <input type="password" id="password" placeholder="パスワード" required />
+        <button type="submit">ユーザー追加</button>
       </form>
-      <h3>登録済みユーザー</h3>
       <table id="userTable">
         <thead>
           <tr>
-            <th>表示名</th>
-            <th>ID</th>
+            <th>ユーザー名</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
-    </div>
-  </div>
+    </section>
+  </main>
 
   <script>
-    // --- タブ切り替え ---
-    document.querySelectorAll('.tablink').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tablink').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.tab').forEach(tab => tab.style.display = 'none');
-        document.getElementById(btn.dataset.target).style.display = 'block';
-      });
-    });
+    // ===== セクション切替 =====
+    function showSection(id) {
+      document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+    }
 
-    // --- 投稿登録 ---
+    // ===== 投稿管理 =====
     const postForm = document.getElementById('postForm');
     const postTable = document.querySelector('#postTable tbody');
-    const allPostsTable = document.querySelector('#allPostsTable tbody');
     let posts = JSON.parse(localStorage.getItem('posts')) || [];
+
+    function detectSiteName(url) {
+      const u = (url || '').toLowerCase();
+      if (u.includes('mgstage.com')) return 'MGS';
+      if (u.includes('dmm.co.jp') || u.includes('fanza')) return 'FANZA';
+      return '不明';
+    }
+
+    function normalizePost(p) {
+      if (!p.site) p.site = detectSiteName(p.url || p.fanza);
+      if (!p.url && p.fanza) p.url = p.fanza;
+      return p;
+    }
 
     function renderPosts() {
       postTable.innerHTML = "";
-      allPostsTable.innerHTML = "";
+      posts = posts.map(normalizePost);
+
       posts.forEach((p, i) => {
         const row = `
           <tr>
+            <td>${p.site || '不明'}</td>
             <td><img src="${p.thumb}" alt="thumb"></td>
-            <td><a href="${p.fanza}" target="_blank">リンク</a></td>
+            <td><a href="${p.url}" target="_blank">リンク</a></td>
             <td><a href="${p.video}" target="_blank">動画</a></td>
             <td>
               <button class="action-btn" onclick="editPost(${i})">編集</button>
               <button class="action-btn delete-btn" onclick="deletePost(${i})">削除</button>
             </td>
           </tr>`;
-        postTable.innerHTML += row;
-        allPostsTable.innerHTML += row;
+        postTable.insertAdjacentHTML('beforeend', row);
       });
+
+      localStorage.setItem('posts', JSON.stringify(posts));
     }
     renderPosts();
 
     postForm.addEventListener('submit', e => {
       e.preventDefault();
+      const workURL = document.getElementById('workURL').value.trim();
+      const thumbURL = document.getElementById('thumbURL').value.trim();
+      const videoURL = document.getElementById('videoURL').value.trim();
+
       const newPost = {
-        fanza: fanzaURL.value,
-        thumb: thumbURL.value,
-        video: videoURL.value
+        site: detectSiteName(workURL),
+        url: workURL,
+        thumb: thumbURL,
+        video: videoURL
       };
+
       posts.push(newPost);
       localStorage.setItem('posts', JSON.stringify(posts));
       postForm.reset();
@@ -234,7 +226,7 @@
       renderPosts();
     }
 
-    // --- ユーザー管理 ---
+    // ===== ユーザー管理 =====
     const userForm = document.getElementById('userForm');
     const userTable = document.querySelector('#userTable tbody');
     let users = JSON.parse(localStorage.getItem('users')) || [];
@@ -244,19 +236,20 @@
       users.forEach((u, i) => {
         const row = `
           <tr>
-            <td>${u.name}</td>
-            <td>${u.id}</td>
+            <td>${u.username}</td>
             <td><button class="action-btn delete-btn" onclick="deleteUser(${i})">削除</button></td>
           </tr>`;
-        userTable.innerHTML += row;
+        userTable.insertAdjacentHTML('beforeend', row);
       });
+      localStorage.setItem('users', JSON.stringify(users));
     }
     renderUsers();
 
     userForm.addEventListener('submit', e => {
       e.preventDefault();
-      const newUser = { name: userName.value, id: userID.value, pw: userPW.value };
-      users.push(newUser);
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      users.push({ username, password });
       localStorage.setItem('users', JSON.stringify(users));
       userForm.reset();
       renderUsers();
@@ -268,8 +261,9 @@
       renderUsers();
     }
 
+    // 編集ボタンは今後 worker.html に繋ぐ予定
     function editPost(i) {
-      alert('ここでworker.htmlの編集画面へ移動予定');
+      alert(`編集モード（仮）: ${posts[i].url}`);
     }
   </script>
 </body>
