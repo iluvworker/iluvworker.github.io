@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Worker Panel</title>
   <style>
     body {
@@ -39,41 +39,105 @@
       padding: 20px;
       overflow-y: auto;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    th, td {
-      border-bottom: 1px solid #ccc;
-      padding: 10px;
-      text-align: left;
-      vertical-align: middle;
-    }
-    img {
-      width: 100px;
-      border-radius: 4px;
-    }
-    button.action-btn {
-      background: #0078d7;
-      border: none;
-      padding: 6px 10px;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button.delete-btn {
-      background: #d9534f;
-    }
     h3 {
       border-left: 4px solid #0078d7;
       padding-left: 8px;
+    }
+    /* 検索バー */
+    #searchBar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    #searchInput {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    #searchBtn {
+      background: #0078d7;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #searchBtn:hover {
+      background: #005fa3;
+    }
+
+    /* グリッド */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+    .card {
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: box-shadow 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .thumb {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    .site {
+      font-size: 0.9em;
+      color: #0078d7;
+      text-decoration: none;
+    }
+    .date {
+      font-size: 0.8em;
+      color: #555;
+    }
+    .edit-btn {
+      background: #0078d7;
+      color: #fff;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      align-self: flex-end;
+    }
+    .edit-btn:hover {
+      background: #005fa3;
+    }
+    /* ページネーション */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+      gap: 10px;
+    }
+    .pagination button {
+      background: #e0e0e0;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .pagination button:hover {
+      background: #d0d0d0;
     }
   </style>
 </head>
 <body>
   <aside>
-    <button onclick="showSection('homeSection')">ホーム</button>
+    <button onclick="showSection('homeSection')">🏠 ホーム</button>
     <button onclick="showSection('todoSection')">未編集一覧</button>
     <button onclick="showSection('statsSection')">編集履歴</button>
   </aside>
@@ -81,39 +145,31 @@
   <main>
     <!-- ホーム -->
     <section id="homeSection">
-      <h3>ホーム</h3>
-      <p>今日の編集数：<span id="todayCount">0</span>　｜　今週の編集数：<span id="weekCount">0</span></p>
-      <div style="display:flex; gap:16px; align-items:center; margin:12px 0;">
-        <button class="action-btn" onclick="showSection('todoSection')">下書き一覧</button>
-        <button class="action-btn" onclick="showSection('todoSection')">作業開始</button>
-        <button class="action-btn" onclick="location.reload()">🔄 最新に更新</button>
-      </div>
-      <canvas id="chart" width="400" height="180"></canvas>
+      <h3>Worker パネルへようこそ</h3>
+      <p>左のメニューから操作を選択してください。</p>
     </section>
 
     <!-- 未編集一覧 -->
     <section id="todoSection" style="display:none;">
       <h3>未編集動画</h3>
-      <table id="todoTable">
-        <thead>
-          <tr>
-            <th>サムネ</th>
-            <th>作品URL</th>
-            <th>動画</th>
-            <th>投稿日</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div id="searchBar">
+        <input type="text" id="searchInput" placeholder="タイトル・URL・サイト名で検索" />
+        <button id="searchBtn" onclick="searchPosts()">🔍 検索</button>
+      </div>
+      <div class="grid" id="todoGrid"></div>
+      <div class="pagination">
+        <button onclick="prevPage()">← 前へ</button>
+        <span id="pageInfo">ページ 1 / 1</span>
+        <button onclick="nextPage()">次へ →</button>
+      </div>
     </section>
 
     <!-- 編集履歴 -->
     <section id="statsSection" style="display:none;">
       <h3>編集履歴</h3>
-      <p>今日の編集数：<span id="todayCountStats">0</span></p>
-      <p>今週の編集数：<span id="weekCountStats">0</span></p>
-      <canvas id="chartStats" width="400" height="200"></canvas>
+      <p>今日の編集数：<span id="todayCount">0</span></p>
+      <p>今週の編集数：<span id="weekCount">0</span></p>
+      <canvas id="chart" width="400" height="200"></canvas>
     </section>
   </main>
 
@@ -125,61 +181,81 @@
     const API_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${FILE_PATH}`;
 
     let posts = [];
+    let filtered = [];
+    let currentPage = 1;
+    const perPage = 15; // 3列×5段
     let editLogs = JSON.parse(localStorage.getItem("editLogs")) || [];
 
-    // セクション切替
     function showSection(id) {
       document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
       document.getElementById(id).style.display = 'block';
-      sessionStorage.setItem('worker_last_section', id);
     }
 
-    // ページ読み込み時に前回の表示を復元
-    window.addEventListener('load', () => {
-      const last = sessionStorage.getItem('worker_last_section') || 'homeSection';
-      showSection(last);
-      fetchPosts();
-      renderStats();
-    });
-
-    // 投稿取得
     async function fetchPosts() {
-      const res = await fetch(API_URL + "?t=" + Date.now()); // キャッシュ防止
+      const res = await fetch(API_URL + "?t=" + Date.now());
       posts = await res.json();
-      renderTodo();
+      filtered = posts.filter(p => !p.edited);
+      renderGrid();
       renderStats();
     }
 
-    // 未編集一覧描画
-    function renderTodo() {
-      const tbody = document.querySelector("#todoTable tbody");
-      tbody.innerHTML = "";
-      posts.forEach((p, i) => {
-        if (!p.edited) {
-          const row = `
-            <tr>
-              <td><img src="${p.thumb}"></td>
-              <td><a href="${p.url}" target="_blank">${p.site}</a></td>
-              <td><a href="${p.video}" target="_blank">動画</a></td>
-              <td>${p.date || '—'}</td>
-              <td><button class="action-btn" onclick="markEdited(${i})">完了</button></td>
-            </tr>`;
-          tbody.insertAdjacentHTML('beforeend', row);
-        }
+    function renderGrid() {
+      const grid = document.getElementById("todoGrid");
+      grid.innerHTML = "";
+      const start = (currentPage - 1) * perPage;
+      const end = start + perPage;
+      const pagePosts = filtered.slice(start, end);
+
+      pagePosts.forEach((p, i) => {
+        const card = `
+          <div class="card">
+            <img src="${p.thumb}" class="thumb">
+            <a href="${p.url}" target="_blank" class="site">${p.site}</a>
+            <div class="date">${p.date || '—'}</div>
+            <button class="edit-btn" onclick="markEdited(${posts.indexOf(p)})">編集</button>
+          </div>`;
+        grid.insertAdjacentHTML('beforeend', card);
       });
+
+      document.getElementById("pageInfo").textContent =
+        `ページ ${currentPage} / ${Math.ceil(filtered.length / perPage) || 1}`;
     }
 
-    // 編集完了記録
+    function searchPosts() {
+      const q = document.getElementById("searchInput").value.toLowerCase();
+      filtered = posts.filter(p =>
+        !p.edited &&
+        (p.url.toLowerCase().includes(q) ||
+         p.site.toLowerCase().includes(q) ||
+         (p.date && p.date.includes(q)))
+      );
+      currentPage = 1;
+      renderGrid();
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderGrid();
+      }
+    }
+    function nextPage() {
+      if (currentPage * perPage < filtered.length) {
+        currentPage++;
+        renderGrid();
+      }
+    }
+
     function markEdited(i) {
       posts[i].edited = true;
       editLogs.push({ date: new Date().toISOString() });
       localStorage.setItem("editLogs", JSON.stringify(editLogs));
-      renderTodo();
+      filtered = posts.filter(p => !p.edited);
+      renderGrid();
       renderStats();
-      alert("編集完了として記録しました！");
+      alert("編集として記録しました！");
     }
 
-    // 編集履歴集計
     function renderStats() {
       const today = new Date().toISOString().slice(0,10);
       const thisWeek = getWeekRange();
@@ -188,16 +264,11 @@
         const d = new Date(e.date);
         return d >= thisWeek.start && d <= thisWeek.end;
       }).length;
-
       document.getElementById("todayCount").textContent = todayCount;
       document.getElementById("weekCount").textContent = weekCount;
-      document.getElementById("todayCountStats").textContent = todayCount;
-      document.getElementById("weekCountStats").textContent = weekCount;
-
       drawChart();
     }
 
-    // 週の範囲を取得
     function getWeekRange() {
       const now = new Date();
       const day = now.getDay() || 7;
@@ -208,7 +279,6 @@
       return { start, end };
     }
 
-    // 折れ線グラフ描画
     function drawChart() {
       const ctx = document.getElementById('chart').getContext('2d');
       const days = [...Array(7)].map((_, i) => {
@@ -237,6 +307,8 @@
         }
       });
     }
+
+    fetchPosts();
   </script>
 </body>
 </html>
