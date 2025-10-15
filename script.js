@@ -5,22 +5,18 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
   const password = document.getElementById("password").value.trim();
   const error = document.getElementById("error-message");
 
-  // users.json を読み込む（キャッシュ対策つき）
   fetch("users.json?v=" + new Date().getTime())
     .then((response) => response.json())
     .then((accounts) => {
-      // 管理者情報
       const admin = accounts.admin;
       let success = false;
 
-      // 管理者判定
       if (username === admin.username && password === admin.password) {
         success = true;
         window.location.href = "admin.html";
       } else {
-        // 管理者でなければ他の全ユーザーをチェック
         for (let key in accounts) {
-          if (key === "admin") continue; // 管理者スキップ
+          if (key === "admin") continue;
           const user = accounts[key];
           if (username === user.username && password === user.password) {
             success = true;
