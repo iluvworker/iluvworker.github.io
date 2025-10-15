@@ -1,32 +1,38 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ログイン - 作業管理システム</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="login-container">
-    <h1>作業ログイン</h1>
-    <form id="loginForm">
-      <label for="username">ユーザー名</label>
-      <input type="text" id="username" required />
+document.getElementById("loginForm").addEventListener("submit", function (e) {
+  e.preventDefault();
 
-      <label for="password">パスワード</label>
-      <input type="password" id="password" required />
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const error = document.getElementById("error-message");
 
-      <label for="role">ログイン種別</label>
-      <select id="role" required>
-        <option value="worker">ワーカー</option>
-        <option value="admin">管理者</option>
-      </select>
+  // users.jsonからデータ読み込み
+  fetch("users.json?v=" + new Date().getTime())
+    .then((response) => response.json())
+    .then((accounts) => {
+      let loginSuccess = false;
 
-      <button type="submit">ログイン</button>
-    </form>
-    <p id="error-message"></p>
-  </div>
+      // 各ユーザーをループして照合
+      for (let role in accounts) {
+        const user = accounts[role];
+        if (username === user.username && password === user.password) {
+          loginSuccess = true;
+          if (role === "admin") {
+            window.location.href = "admin.html";
+          } else {
+            window.location.href = "worker.html";
+          }
+          break;
+        }
+      }
 
-  <script src="script.js"></script>
-</body>
-</html>
+      if (!loginSuccess) {
+        error.textContent = "ユーザー名またはパスワードが正しくありません。";
+        error.style.color = "red";
+      }
+    })
+    .catch((err) => {
+      console.error("Error loading users.json:", err);
+      error.textContent = "ログイン情報の読み込みに失敗しました。";
+      error.style.color = "red";
+    });
+});
