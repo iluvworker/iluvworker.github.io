@@ -237,37 +237,49 @@ async function deletePost(i) {
 }
 
 // ==============================
-// 投稿描画
+// 投稿追加（修正版）
 // ==============================
-function detectSiteName(url) {
-  const u = (url || '').toLowerCase();
-  if (u.includes('mgstage.com')) return 'MGS';
-  if (u.includes('dmm.co.jp') || u.includes('fanza')) return 'FANZA';
-  return '不明';
-}
+const postForm = document.getElementById('postForm');
+const workURLInput = document.getElementById('workURL');
+const thumbURLInput = document.getElementById('thumbURL');
+const videoURLInput = document.getElementById('videoURL');
 
-function renderPosts() {
-  const postTable = document.querySelector('#postTable tbody');
-  const allPostsTable = document.querySelector('#allPostsTable tbody');
-  postTable.innerHTML = allPostsTable.innerHTML = "";
+postForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-  posts.slice().reverse().forEach((p, i) => {
-    const site = detectSiteName(p.url);
-    const row = `
-      <tr>
-        <td><img src="${p.thumb}" alt="thumb"></td>
-        <td><a href="${p.url}" target="_blank">${site}</a></td>
-        <td><a href="${p.video}" target="_blank">動画</a></td>
-        <td>${p.date || '—'}</td>
-        <td>
-          <button class="action-btn" onclick="editPost(${i})">編集</button>
-          <button class="action-btn delete-btn" onclick="deletePost(${i})">削除</button>
-        </td>
-      </tr>`;
-    postTable.insertAdjacentHTML('beforeend', row);
-    allPostsTable.insertAdjacentHTML('beforeend', row);
-  });
-}
+  const workURL = workURLInput.value.trim();
+  const thumbURL = thumbURLInput.value.trim();
+  const videoURL = videoURLInput.value.trim();
+
+  if (!workURL || !thumbURL || !videoURL) {
+    alert("全ての項目を入力してください。");
+    return;
+  }
+
+  const newPost = {
+    site: detectSiteName(workURL),
+    url: workURL,
+    thumb: thumbURL,
+    video: videoURL,
+    date: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
+  };
+
+  // 追加して保存
+  posts.push(newPost);
+  localStorage.setItem('pendingPosts', JSON.stringify(posts));
+  renderPosts();
+
+  // GitHub Actionsトリガー
+  try {
+    await triggerWorkflow();
+    alert("投稿データを送信しました。反映まで数分お待ちください。");
+  } catch (err) {
+    console.error("投稿エラー:", err);
+    alert("投稿処理中にエラーが発生しました。コンソールを確認してください。");
+  }
+
+  postForm.reset();
+});
 
 function editPost(i) {
   alert(`編集モード（仮）: ${posts[i].url}`);
