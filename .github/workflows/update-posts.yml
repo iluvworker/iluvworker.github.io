@@ -1,0 +1,14 @@
+name: Update posts.json
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'posts.json'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update JSON
+        run: echo "Auto-update complete"
