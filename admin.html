@@ -153,10 +153,17 @@
 
   <script>
     // ===== セクション切替 =====
-    function showSection(id) {
-      document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
-      document.getElementById(id).style.display = 'block';
-    }
+  function showSection(id) {
+    document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    localStorage.setItem('lastSection', id); // ← 最後に開いたページを保存
+  }
+
+  // ページ読み込み時に前回の表示を復元
+  window.addEventListener('load', () => {
+    const last = localStorage.getItem('lastSection') || 'postFormSection';
+    showSection(last);
+  });
 
     // ===== 投稿管理 =====
     const postForm = document.getElementById('postForm');
