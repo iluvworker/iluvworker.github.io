@@ -142,11 +142,11 @@
     function showSection(id) {
       document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
       document.getElementById(id).style.display = 'block';
-      localStorage.setItem('lastSection', id);
+      sessionStorage.setItem('lastSection', id);
     }
 
     window.addEventListener('load', () => {
-      const last = localStorage.getItem('lastSection') || 'homeSection';
+      const last = sessionStorage.getItem('lastSection') || 'homeSection';
       showSection(last);
     });
 
@@ -179,7 +179,7 @@
     document.getElementById('weekHistory').textContent = weekTotal;
 
     // ===== 未編集動画一覧 =====
-    let posts = JSON.parse(localStorage.getItem('posts')) || [];
+    let posts = JSON.parse(sessionStorage.getItem('posts')) || [];
     let page = 1;
     const perPage = 10;
     const grid = document.getElementById('workerPostGrid');
