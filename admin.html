@@ -148,25 +148,6 @@
         <tbody></tbody>
       </table>
     </section>
-
-    <!-- ユーザー管理 -->
-    <section id="userSection" style="display:none;">
-      <h3>ユーザー管理</h3>
-      <form id="userForm">
-        <input type="text" id="username" placeholder="ユーザー名" required />
-        <input type="password" id="password" placeholder="パスワード" required />
-        <button type="submit">ユーザー追加</button>
-      </form>
-      <table id="userTable">
-        <thead>
-          <tr>
-            <th>ユーザー名</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
   </main>
 
   <script>
@@ -245,34 +226,7 @@
       renderPosts();
     }
 
-    // ===== ユーザー管理 =====
-    const userForm = document.getElementById('userForm');
-    const userTable = document.querySelector('#userTable tbody');
-    let users = JSON.parse(localStorage.getItem('users')) || [];
-
-    function renderUsers() {
-      userTable.innerHTML = "";
-      users.forEach((u, i) => {
-        const row = `
-          <tr>
-            <td>${u.username}</td>
-            <td><button class="action-btn delete-btn" onclick="deleteUser(${i})">削除</button></td>
-          </tr>`;
-        userTable.insertAdjacentHTML('beforeend', row);
-      });
-      localStorage.setItem('users', JSON.stringify(users));
-    }
-    renderUsers();
-
-    userForm.addEventListener('submit', e => {
-      e.preventDefault();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-      users.push({ username, password });
-      localStorage.setItem('users', JSON.stringify(users));
-      userForm.reset();
-      renderUsers();
-    });
+  );
 
     function deleteUser(i) {
       users.splice(i, 1);
