@@ -143,11 +143,29 @@
   </aside>
 
   <main>
-    <!-- ホーム -->
-    <section id="homeSection">
-      <h3>Worker パネルへようこそ</h3>
-      <p>左のメニューから操作を選択してください。</p>
-    </section>
+   <!-- 🏠 ホームセクション -->
+<section id="homeSection">
+  <h3>ホーム</h3>
+  <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:70vh; text-align:center;">
+    <div style="font-size:2rem; font-weight:bold; margin-bottom:20px;">
+      今日の達成件数：<span id="todayDone">0</span> 件
+    </div>
+
+    <div style="display:flex; gap:20px; justify-content:center;">
+      <button class="action-btn" onclick="alert('下書きリストは準備中です')">
+        📄 下書きリスト
+      </button>
+
+      <button class="action-btn" onclick="showSection('doneSection')">
+        ✅ 投稿済み一覧
+      </button>
+
+      <button class="action-btn" onclick="showSection('todoSection')">
+        🛠 作業開始
+      </button>
+    </div>
+  </div>
+</section>
 
     <!-- 未編集一覧 -->
     <section id="todoSection" style="display:none;">
