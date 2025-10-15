@@ -176,12 +176,14 @@
       return p;
     }
 
+    // ===== 投稿一覧の描画 =====
     function renderPosts() {
       postTable.innerHTML = "";
       allPostsTable.innerHTML = "";
       posts = posts.map(normalizePost);
 
-      posts.forEach((p, i) => {
+      // 新しい投稿が上に来るように逆順で表示
+      [...posts].reverse().forEach((p, i) => {
         const siteName = detectSiteName(p.url);
         const linkHTML = `<a href="${p.url}" target="_blank">${siteName}</a>`;
         const row = `
@@ -189,6 +191,7 @@
             <td><img src="${p.thumb}" alt="thumb"></td>
             <td>${linkHTML}</td>
             <td><a href="${p.video}" target="_blank">動画</a></td>
+            <td>${p.date || '—'}</td>
             <td>
               <button class="action-btn" onclick="editPost(${i})">編集</button>
               <button class="action-btn delete-btn" onclick="deletePost(${i})">削除</button>
@@ -202,6 +205,7 @@
     }
     renderPosts();
 
+    // ===== 新規投稿 =====
     postForm.addEventListener('submit', e => {
       e.preventDefault();
       const workURL = document.getElementById('workURL').value.trim();
@@ -212,7 +216,8 @@
         site: detectSiteName(workURL),
         url: workURL,
         thumb: thumbURL,
-        video: videoURL
+        video: videoURL,
+        date: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
       };
 
       posts.push(newPost);
@@ -221,12 +226,14 @@
       renderPosts();
     });
 
+    // ===== 投稿削除 =====
     function deletePost(i) {
       posts.splice(i, 1);
       localStorage.setItem('posts', JSON.stringify(posts));
       renderPosts();
     }
 
+    // ===== 編集（仮） =====
     function editPost(i) {
       alert(`編集モード（仮）: ${posts[i].url}`);
     }
