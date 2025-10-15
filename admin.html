@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理者ページ</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      display: flex;
+      background: #f9fbfd;
+      color: #333;
+    }
+    .sidebar {
+      width: 220px;
+      background: #1e88e5;
+      color: white;
+      height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .sidebar h2 {
+      font-size: 20px;
+      margin-bottom: 30px;
+    }
+    .sidebar button {
+      display: block;
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: white;
+      text-align: left;
+      font-size: 16px;
+      padding: 10px 0;
+      cursor: pointer;
+    }
+    .sidebar button:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    .main {
+      flex: 1;
+      padding: 30px;
+    }
+    h1 {
+      color: #1e88e5;
+      margin-bottom: 20px;
+    }
+    form {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button[type="submit"] {
+      background: #1e88e5;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover {
+      background: #1565c0;
+    }
+    .post-list {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    .post-item {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      padding: 10px 0;
+    }
+    .post-item img {
+      width: 100px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-right: 15px;
+    }
+    .post-item a {
+      color: #1e88e5;
+      text-decoration: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>管理メニュー</h2>
+    <button onclick="showSection('newPost')">新規投稿</button>
+    <button onclick="showSection('worker')">ワーカー管理</button>
+    <button onclick="showSection('posts')">投稿一覧</button>
+  </div>
+
+  <div class="main">
+    <section id="newPost">
+      <h1>新規投稿</h1>
+      <form id="postForm">
+        <label for="fanzaUrl">FANZA URL</label>
+        <input type="text" id="fanzaUrl" placeholder="https://www.dmm.co.jp/..." required>
+        <label for="thumbUrl">サムネURL</label>
+        <input type="text" id="thumbUrl" placeholder="https://.../sample.webp" required>
+        <label for="videoUrl">動画URL</label>
+        <input type="text" id="videoUrl" placeholder="https://..." required>
+        <button type="submit">登録</button>
+      </form>
+
+      <div class="post-list" id="postList"></div>
+    </section>
+
+    <section id="worker" style="display:none">
+      <h1>ワーカー管理（仮）</h1>
+      <p>※この画面ではまだ機能しません。</p>
+    </section>
+
+    <section id="posts" style="display:none">
+      <h1>投稿一覧（仮）</h1>
+      <p>※この画面ではまだ機能しません。</p>
+    </section>
+  </div>
+
+  <script>
+    const postForm = document.getElementById('postForm');
+    const postList = document.getElementById('postList');
+    let posts = [];
+
+    postForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const fanzaUrl = document.getElementById('fanzaUrl').value;
+      const thumbUrl = document.getElementById('thumbUrl').value;
+      const videoUrl = document.getElementById('videoUrl').value;
+
+      const newPost = { fanzaUrl, thumbUrl, videoUrl };
+      posts.push(newPost);
+      displayPosts();
+
+      postForm.reset();
+    });
+
+    function displayPosts() {
+      postList.innerHTML = '';
+      posts.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'post-item';
+        div.innerHTML = `
+          <img src="${p.thumbUrl}" alt="thumb">
+          <div>
+            <a href="${p.fanzaUrl}" target="_blank">FANZAリンク</a>
+            <a href="${p.videoUrl}" target="_blank">動画リンク</a>
+          </div>
+        `;
+        postList.appendChild(div);
+      });
+    }
+
+    function showSection(id) {
+      document.querySelectorAll('.main section').forEach(sec => sec.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+    }
+  </script>
+</body>
+</html>
