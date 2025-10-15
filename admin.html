@@ -153,24 +153,43 @@
   </main>
 
   <script>
+    // ===== GitHub設定 =====
+    const GITHUB_TOKEN = process.env.TOKEN; // ← Secrets から自動取得
+    const REPO_OWNER = "iluvworker"; // ← 例: "kyontan"
+    const REPO_NAME = "iluvworker.github.io";        // ← 例: "video-manager"
+    const FILE_PATH = "posts.json";
+
     // ===== セクション切替 =====
-  function showSection(id) {
-    document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    sessionStorage.setItem('lastSection', id); // ← 最後に開いたページを保存
-  }
+    function showSection(id) {
+      document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+      sessionStorage.setItem('lastSection', id);
+    }
 
-  // ページ読み込み時に前回の表示を復元
-  window.addEventListener('load', () => {
-    const last = sessionStorage.getItem('lastSection') || 'postFormSection';
-    showSection(last);
-  });
+    window.addEventListener('load', () => {
+      const last = sessionStorage.getItem('lastSection') || 'postFormSection';
+      showSection(last);
+      loadPosts();
+    });
 
-    // ===== 投稿管理 =====
+    // ===== 投稿データ読み込み =====
+    let posts = [];
+
+    async function loadPosts() {
+      try {
+        const res = await fetch(`https://${REPO_OWNER}.github.io/${REPO_NAME}/posts.json?_=${Date.now()}`);
+        posts = await res.json();
+        renderPosts();
+      } catch (err) {
+        console.error("読み込みエラー:", err);
+        posts = [];
+      }
+    }
+
+    // ===== 投稿一覧の描画 =====
     const postForm = document.getElementById('postForm');
     const postTable = document.querySelector('#postTable tbody');
     const allPostsTable = document.querySelector('#allPostsTable tbody');
-    let posts = JSON.parse(sessionStorage.getItem('posts')) || [];
 
     function detectSiteName(url) {
       const u = (url || '').toLowerCase();
@@ -185,13 +204,10 @@
       return p;
     }
 
-    // ===== 投稿一覧の描画 =====
     function renderPosts() {
       postTable.innerHTML = "";
       allPostsTable.innerHTML = "";
       posts = posts.map(normalizePost);
-
-      // 新しい投稿が上に来るように逆順で表示
       [...posts].reverse().forEach((p, i) => {
         const siteName = detectSiteName(p.url);
         const linkHTML = `<a href="${p.url}" target="_blank">${siteName}</a>`;
@@ -209,13 +225,31 @@
         postTable.insertAdjacentHTML('beforeend', row);
         allPostsTable.insertAdjacentHTML('beforeend', row);
       });
-
-      sessionStorage.setItem('posts', JSON.stringify(posts));
     }
-    renderPosts();
+
+    // ===== GitHub更新処理 =====
+    async function updateGitHubPosts(posts) {
+      const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+      const res = await fetch(url, { headers: { Authorization: `token ${GITHUB_TOKEN}` } });
+      const data = await res.json();
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(posts, null, 2))));
+
+      await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `token ${GITHUB_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: "update posts",
+          content: content,
+          sha: data.sha,
+        }),
+      });
+    }
 
     // ===== 新規投稿 =====
-    postForm.addEventListener('submit', e => {
+    postForm.addEventListener('submit', async e => {
       e.preventDefault();
       const workURL = document.getElementById('workURL').value.trim();
       const thumbURL = document.getElementById('thumbURL').value.trim();
@@ -230,19 +264,20 @@
       };
 
       posts.push(newPost);
-      sessionStorage.setItem('posts', JSON.stringify(posts));
-      postForm.reset();
       renderPosts();
+      postForm.reset();
+      await updateGitHubPosts(posts);
+      alert("投稿をGitHubに保存しました！");
     });
 
-    // ===== 投稿削除 =====
-    function deletePost(i) {
+    // ===== 削除 =====
+    async function deletePost(i) {
       posts.splice(i, 1);
-      sessionStorage.setItem('posts', JSON.stringify(posts));
       renderPosts();
+      await updateGitHubPosts(posts);
+      alert("削除しました！");
     }
 
-    // ===== 編集（仮） =====
     function editPost(i) {
       alert(`編集モード（仮）: ${posts[i].url}`);
     }
