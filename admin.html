@@ -54,6 +54,7 @@
       border-bottom: 1px solid #ccc;
       padding: 10px;
       text-align: left;
+      vertical-align: middle;
     }
 
     img {
@@ -99,7 +100,6 @@
   <aside>
     <button onclick="showSection('postFormSection')">投稿画面</button>
     <button onclick="showSection('postListSection')">投稿一覧</button>
-    <button onclick="showSection('userSection')">ユーザー管理</button>
   </aside>
 
   <main>
@@ -182,11 +182,12 @@
       posts = posts.map(normalizePost);
 
       posts.forEach((p, i) => {
-        const linkText = p.site ? p.site : "リンク";
+        const siteName = detectSiteName(p.url);
+        const linkHTML = `<a href="${p.url}" target="_blank">${siteName}</a>`;
         const row = `
           <tr>
             <td><img src="${p.thumb}" alt="thumb"></td>
-            <td><a href="${p.url}" target="_blank">${linkText}</a></td>
+            <td>${linkHTML}</td>
             <td><a href="${p.video}" target="_blank">動画</a></td>
             <td>
               <button class="action-btn" onclick="editPost(${i})">編集</button>
@@ -224,14 +225,6 @@
       posts.splice(i, 1);
       localStorage.setItem('posts', JSON.stringify(posts));
       renderPosts();
-    }
-
-  );
-
-    function deleteUser(i) {
-      users.splice(i, 1);
-      localStorage.setItem('users', JSON.stringify(users));
-      renderUsers();
     }
 
     function editPost(i) {
