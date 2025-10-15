@@ -1,4 +1,4 @@
 {
-  "admin": { "username": "tsuvasa283", "password": "stronger" },
-  "worker": { "username": "worker1", "password": "abc123" }
+  "admin": { "username": "tsuvasa283", "password": "stronger", "name": "神" },
+  "worker": { "username": "worker1", "password": "abc123", "name": "雑魚" }
 }
