@@ -61,19 +61,24 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
+    /* ==== グリッド表示 ==== */
+    #workerPostGrid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 15px;
+      margin-top: 20px;
     }
-    th, td {
-      border-bottom: 1px solid #ccc;
+    .post-card {
+      border: 1px solid #ccc;
+      border-radius: 6px;
       padding: 10px;
-      text-align: left;
+      background: #fff;
+      text-align: center;
     }
-    img {
-      width: 100px;
+    .post-card img {
+      width: 100%;
       border-radius: 4px;
+      margin-bottom: 8px;
     }
   </style>
 </head>
@@ -101,17 +106,7 @@
     <!-- 未編集動画 -->
     <section id="uneditSection" style="display:none;">
       <h3>未編集動画</h3>
-      <table id="uneditTable">
-        <thead>
-          <tr>
-            <th>サムネ</th>
-            <th>作品URL</th>
-            <th>動画</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div id="workerPostGrid"></div>
       <div class="center">
         <button onclick="prevPage()">前へ</button>
         <span id="pageInfo">1</span>
@@ -144,29 +139,28 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // ===== セクション切替 =====
-  function showSection(id) {
-    document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    localStorage.setItem('lastSection', id); // ← 最後に開いたページを保存
-  }
+    function showSection(id) {
+      document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+      localStorage.setItem('lastSection', id);
+    }
 
-  // ページ読み込み時に前回の表示を復元
-  window.addEventListener('load', () => {
-    const last = localStorage.getItem('lastSection') || 'postFormSection';
-    showSection(last);
-  });
+    window.addEventListener('load', () => {
+      const last = localStorage.getItem('lastSection') || 'homeSection';
+      showSection(last);
+    });
 
-    // ====== グラフ描画 ======
+    // ===== グラフ =====
     const ctx = document.getElementById('workChart').getContext('2d');
     const labels = ['月', '火', '水', '木', '金', '土', '日'];
     const data = [3, 5, 2, 6, 4, 7, 5];
     new Chart(ctx, {
       type: 'line',
       data: {
-        labels: labels,
+        labels,
         datasets: [{
           label: '週間作業件数',
-          data: data,
+          data,
           borderColor: '#0078d7',
           backgroundColor: 'rgba(0,120,215,0.2)',
           fill: true,
@@ -176,7 +170,7 @@
       options: { responsive: true, plugins: { legend: { display: false } } }
     });
 
-    // ====== 今日と今週の件数 ======
+    // ===== 今日・今週 =====
     const today = 5;
     const weekTotal = data.reduce((a,b)=>a+b,0);
     document.getElementById('todayCount').textContent = today;
@@ -184,29 +178,36 @@
     document.getElementById('todayHistory').textContent = today;
     document.getElementById('weekHistory').textContent = weekTotal;
 
-    // ====== 未編集動画一覧 ======
+    // ===== 未編集動画一覧 =====
     let posts = JSON.parse(localStorage.getItem('posts')) || [];
     let page = 1;
     const perPage = 10;
-    const uneditTable = document.querySelector('#uneditTable tbody');
+    const grid = document.getElementById('workerPostGrid');
 
     function renderPosts() {
-      uneditTable.innerHTML = "";
+      // 古い順にソート
+      posts.sort((a,b)=> new Date(a.date) - new Date(b.date));
+
+      grid.innerHTML = "";
       const start = (page-1)*perPage;
       const end = start + perPage;
       const sliced = posts.slice(start, end);
+
       sliced.forEach((p,i)=>{
-        const row = `
-          <tr>
-            <td><img src="${p.thumb}" alt="thumb"></td>
-            <td><a href="${p.url}" target="_blank">${p.site || "リンク"}</a></td>
-            <td><a href="${p.video}" target="_blank">動画</a></td>
-            <td><button class="action-btn" onclick="editPost(${start+i})">編集</button></td>
-          </tr>`;
-        uneditTable.insertAdjacentHTML('beforeend', row);
+        const site = p.site || "リンク";
+        const card = `
+          <div class="post-card">
+            <img src="${p.thumb}" alt="thumb">
+            <a href="${p.url}" target="_blank">${site}</a><br>
+            <a href="${p.video}" target="_blank">動画</a><br>
+            <button class="action-btn" onclick="editPost(${start+i})">編集</button>
+          </div>`;
+        grid.insertAdjacentHTML('beforeend', card);
       });
+
       document.getElementById('pageInfo').textContent = page;
     }
+
     function nextPage(){ if(page*perPage < posts.length){ page++; renderPosts(); }}
     function prevPage(){ if(page>1){ page--; renderPosts(); }}
     renderPosts();
