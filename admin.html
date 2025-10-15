@@ -157,12 +157,12 @@
   function showSection(id) {
     document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
     document.getElementById(id).style.display = 'block';
-    localStorage.setItem('lastSection', id); // ← 最後に開いたページを保存
+    sessionStorage.setItem('lastSection', id); // ← 最後に開いたページを保存
   }
 
   // ページ読み込み時に前回の表示を復元
   window.addEventListener('load', () => {
-    const last = localStorage.getItem('lastSection') || 'postFormSection';
+    const last = sessionStorage.getItem('lastSection') || 'postFormSection';
     showSection(last);
   });
 
@@ -170,7 +170,7 @@
     const postForm = document.getElementById('postForm');
     const postTable = document.querySelector('#postTable tbody');
     const allPostsTable = document.querySelector('#allPostsTable tbody');
-    let posts = JSON.parse(localStorage.getItem('posts')) || [];
+    let posts = JSON.parse(sessionStorage.getItem('posts')) || [];
 
     function detectSiteName(url) {
       const u = (url || '').toLowerCase();
@@ -210,7 +210,7 @@
         allPostsTable.insertAdjacentHTML('beforeend', row);
       });
 
-      localStorage.setItem('posts', JSON.stringify(posts));
+      sessionStorage.setItem('posts', JSON.stringify(posts));
     }
     renderPosts();
 
@@ -230,7 +230,7 @@
       };
 
       posts.push(newPost);
-      localStorage.setItem('posts', JSON.stringify(posts));
+      sessionStorage.setItem('posts', JSON.stringify(posts));
       postForm.reset();
       renderPosts();
     });
@@ -238,7 +238,7 @@
     // ===== 投稿削除 =====
     function deletePost(i) {
       posts.splice(i, 1);
-      localStorage.setItem('posts', JSON.stringify(posts));
+      sessionStorage.setItem('posts', JSON.stringify(posts));
       renderPosts();
     }
 
