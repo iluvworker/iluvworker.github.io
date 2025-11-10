@@ -1,19 +1,56 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>ログイン画面</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>投稿支援ツール</title>
+<meta name="robots" content="noindex,nofollow" />
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;background:#0f172a;color:#e6eef8;margin:0;padding:20px;}
+  h1{font-size:18px;margin-bottom:10px;}
+  textarea{width:100%;height:90px;border-radius:8px;border:none;padding:8px;background:#101c3b;color:#fff;margin-top:5px;}
+  button{margin-top:6px;padding:6px 12px;border-radius:6px;border:none;background:#2563eb;color:white;cursor:pointer;}
+  .out{background:#071127;padding:10px;border-radius:8px;margin-top:8px;white-space:pre-wrap;}
+  .meta{color:#9fb7f8;font-size:12px;margin-top:5px;}
+</style>
 </head>
 <body>
-  <form id="loginForm">
-    <input type="text" id="username" placeholder="ユーザー名" required>
-    <input type="password" id="password" placeholder="パスワード" required>
-    <button type="submit">ログイン</button>
-    <p id="error-message"></p>
-  </form>
+<h1>投稿支援ツール（JSON辞書対応）</h1>
 
-  <!-- ✅ ここだけ忘れずに！ -->
-  <script src="script.js"></script>
+<h2>① 言い換え候補</h2>
+<textarea id="titleInput" placeholder="タイトルを入力"></textarea>
+<button onclick="generateSynonyms()">言い換え候補を表示</button>
+<div id="output" class="out">ここに言い換え候補が表示されます</div>
+
+<h2>② タグ整形</h2>
+<textarea id="tagInput" placeholder="巨乳 | ギャル | 人妻"></textarea>
+<button onclick="replacePipes()">整形する</button>
+<div id="tagOutput" class="out">整形後のタグがここに出ます</div>
+
+<script>
+let synonyms = {};
+
+fetch("words.json")
+  .then(res => res.json())
+  .then(data => { synonyms = data; })
+  .catch(err => console.error("辞書の読み込みに失敗しました:", err));
+
+function generateSynonyms() {
+  const input = document.getElementById("titleInput").value;
+  let result = "";
+  for (const [key, vals] of Object.entries(synonyms)) {
+    if (input.includes(key)) {
+      result += `『${key}』→ ${vals.join("／")}\n`;
+    }
+  }
+  document.getElementById("output").innerText = result || "該当なし";
+}
+
+function replacePipes() {
+  const input = document.getElementById("tagInput").value;
+  const output = input.replace(/\s*\|\s*/g, " ").trim();
+  document.getElementById("tagOutput").innerText = output;
+}
+</script>
 </body>
 </html>
