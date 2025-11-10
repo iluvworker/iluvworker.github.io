@@ -6,26 +6,34 @@
 <title>投稿支援ツール</title>
 <meta name="robots" content="noindex,nofollow" />
 <style>
-  body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;background:#0f172a;color:#e6eef8;margin:0;padding:20px;}
+  body {font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;background:#0f172a;color:#e6eef8;margin:0;padding:20px;}
   h1{font-size:18px;margin-bottom:10px;}
-  textarea{width:100%;height:90px;border-radius:8px;border:none;padding:8px;background:#101c3b;color:#fff;margin-top:5px;}
+  textarea{width:100%;border-radius:8px;border:none;padding:8px;background:#101c3b;color:#fff;margin-top:5px;font-size:14px;}
   button{margin-top:6px;padding:6px 12px;border-radius:6px;border:none;background:#2563eb;color:white;cursor:pointer;}
   .out{background:#071127;padding:10px;border-radius:8px;margin-top:8px;white-space:pre-wrap;}
   .meta{color:#9fb7f8;font-size:12px;margin-top:5px;}
+  .counter{font-size:13px;color:#9fb7f8;margin-top:3px;text-align:right;}
+  .section{margin-bottom:30px;}
 </style>
 </head>
 <body>
-<h1>投稿支援ツール（JSON辞書対応）</h1>
+<h1>投稿支援ツール（ランダム言い換え＋編集可）</h1>
 
-<h2>① 言い換え候補</h2>
-<textarea id="titleInput" placeholder="タイトルを入力"></textarea>
-<button onclick="generateSynonyms()">言い換え候補を表示</button>
-<div id="output" class="out">ここに言い換え候補が表示されます</div>
+<div class="section">
+  <h2>① タイトル言い換え</h2>
+  <textarea id="titleInput" placeholder="元のタイトルを入力"></textarea>
+  <button onclick="generateRandomRewrite()">ランダム言い換えを生成</button>
+  <textarea id="rewriteOutput" placeholder="ここに生成された言い換え文が出ます（編集可）"></textarea>
+  <div class="counter">文字数：<span id="rewriteCount">0</span></div>
+</div>
 
-<h2>② タグ整形</h2>
-<textarea id="tagInput" placeholder="巨乳 | ギャル | 人妻"></textarea>
-<button onclick="replacePipes()">整形する</button>
-<div id="tagOutput" class="out">整形後のタグがここに出ます</div>
+<div class="section">
+  <h2>② タグ整形</h2>
+  <textarea id="tagInput" placeholder="例: 巨乳 | ギャル | 人妻"></textarea>
+  <button onclick="replacePipes()">整形する</button>
+  <textarea id="tagOutput" placeholder="整形後のタグがここに出ます（編集可）"></textarea>
+  <div class="counter">タグ数：<span id="tagCount">0</span></div>
+</div>
 
 <script>
 let synonyms = {};
@@ -33,24 +41,44 @@ let synonyms = {};
 fetch("words.json")
   .then(res => res.json())
   .then(data => { synonyms = data; })
-  .catch(err => console.error("辞書の読み込みに失敗しました:", err));
+  .catch(err => console.error("辞書読み込み失敗:", err));
 
-function generateSynonyms() {
-  const input = document.getElementById("titleInput").value;
-  let result = "";
-  for (const [key, vals] of Object.entries(synonyms)) {
-    if (input.includes(key)) {
-      result += `『${key}』→ ${vals.join("／")}\n`;
+/* ランダム言い換え */
+function generateRandomRewrite(){
+  let text = document.getElementById("titleInput").value;
+  for(const [key, vals] of Object.entries(synonyms)){
+    const regex = new RegExp(key, "g");
+    if(regex.test(text)){
+      const random = vals[Math.floor(Math.random()*vals.length)];
+      text = text.replace(regex, random);
     }
   }
-  document.getElementById("output").innerText = result || "該当なし";
+  document.getElementById("rewriteOutput").value = text;
+  updateCount();
 }
 
-function replacePipes() {
+/* 文字数カウント */
+function updateCount(){
+  const val = document.getElementById("rewriteOutput").value;
+  document.getElementById("rewriteCount").innerText = val.length;
+}
+document.getElementById("rewriteOutput").addEventListener("input", updateCount);
+
+/* タグ整形 */
+function replacePipes(){
   const input = document.getElementById("tagInput").value;
   const output = input.replace(/\s*\|\s*/g, " ").trim();
-  document.getElementById("tagOutput").innerText = output;
+  document.getElementById("tagOutput").value = output;
+  updateTagCount();
 }
+
+/* タグ数カウント */
+function updateTagCount(){
+  const val = document.getElementById("tagOutput").value.trim();
+  const tags = val ? val.split(/\s+/).filter(t => t.length>0) : [];
+  document.getElementById("tagCount").innerText = tags.length;
+}
+document.getElementById("tagOutput").addEventListener("input", updateTagCount);
 </script>
 </body>
 </html>
