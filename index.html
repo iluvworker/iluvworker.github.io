@@ -52,6 +52,13 @@ function generateRandomRewrite(){
       const random = vals[Math.floor(Math.random()*vals.length)];
       text = text.replace(regex, random);
     }
+    // 記号変換を適用（中身保持）
+if (synonyms["記号変換"]) {
+  for (const [open, close] of Object.entries(synonyms["記号変換"])) {
+    const regex = new RegExp(open, "g");
+    text = text.replace(regex, close);
+  }
+}
   }
   document.getElementById("rewriteOutput").value = text;
   updateCount();
