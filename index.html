@@ -36,35 +36,30 @@
 </div>
 
 <script>
-let synonyms = {};
+let synonymGroups = [];
 
 fetch("words.json")
   .then(res => res.json())
-  .then(data => { synonyms = data; })
+  .then(data => { synonymGroups = data; })
   .catch(err => console.error("辞書読み込み失敗:", err));
-
-function escapeRegExp(str){
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 function generateRandomRewrite() {
   let text = document.getElementById("titleInput").value;
 
-  // ゼロ幅スペース等を除去（安全策）
+  // 全角スペースやゼロ幅除去
   text = text.replace(/[\u200B-\u200D\uFEFF]/g, "");
 
-  // 単語/記号のランダム言い換え（キーは必ずエスケープ！）
-  for (const [key, vals] of Object.entries(synonyms)) {
-    if (Array.isArray(vals)) {
-      const pattern = new RegExp(escapeRegExp(key), "g");
-      if (pattern.test(text)) {
-        const rep = vals[Math.floor(Math.random() * vals.length)];
-        text = text.replace(pattern, rep);
-      }
+  // グループ単位でランダム変換
+  synonymGroups.forEach(group => {
+    const triggers = group.triggers.map(escapeRegExp).join("|");
+    const regex = new RegExp(triggers, "g");
+    if (regex.test(text)) {
+      const rep = group.replacements[Math.floor(Math.random() * group.replacements.length)];
+      text = text.replace(regex, rep);
     }
-  }
+  });
 
-  // 〖…〗 → 〈〉 / 《》 / 【】 / 〚〛 のどれかへランダム括弧変換
+  // 括弧のランダム変換
   const bracketPairs = [
     { open: "〈", close: "〉" },
     { open: "《", close: "》" },
@@ -72,12 +67,16 @@ function generateRandomRewrite() {
     { open: "〚", close: "〛" }
   ];
   text = text.replace(/〖([^〗]+)〗/gu, (_, inner) => {
-    const p = bracketPairs[Math.floor(Math.random()*bracketPairs.length)];
+    const p = bracketPairs[Math.floor(Math.random() * bracketPairs.length)];
     return `${p.open}${inner}${p.close}`;
   });
 
   document.getElementById("rewriteOutput").value = text;
   updateCount();
+}
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /* 文字数カウント */
