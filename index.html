@@ -60,16 +60,19 @@ function generateRandomRewrite() {
   });
 
   // 括弧のランダム変換
-  const bracketPairs = [
-    { open: "〈", close: "〉" },
-    { open: "《", close: "》" },
-    { open: "【", close: "】" },
-    { open: "〚", close: "〛" }
-  ];
-  text = text.replace(/〖([^〗]+)〗/gu, (_, inner) => {
-    const p = bracketPairs[Math.floor(Math.random() * bracketPairs.length)];
-    return `${p.open}${inner}${p.close}`;
-  });
+ // すべての括弧パターンに対応してランダム変換
+const bracketPairs = [
+  { open: "〈", close: "〉" },
+  { open: "《", close: "》" },
+  { open: "【", close: "】" },
+  { open: "〚", close: "〛" },
+  { open: "〖", close: "〗" }
+];
+
+text = text.replace(/[〈《【〚〖]([^〉》】〛〗]+)[〉》】〛〗]/gu, (_, inner) => {
+  const p = bracketPairs[Math.floor(Math.random() * bracketPairs.length)];
+  return `${p.open}${inner}${p.close}`;
+});
 
   document.getElementById("rewriteOutput").value = text;
   updateCount();
