@@ -58,18 +58,19 @@ function generateRandomRewrite() {
     }
   }
 
-  // 「〖〗」をランダムな括弧ペアに置換
-  const bracketPairs = [
-    { open: "〈", close: "〉" },
-    { open: "《", close: "》" },
-    { open: "【", close: "】" },
-    { open: "〚", close: "〛" }
-  ];
+  // 「〖〗」をランダムな括弧ペアに置換（中身を壊さず）
+const bracketPairs = [
+  { open: "〈", close: "〉" },
+  { open: "《", close: "》" },
+  { open: "【", close: "】" },
+  { open: "〚", close: "〛" }
+];
 
-  text = text.replace(/〖(.*?)〗/g, (match, inner) => {
-    const pair = bracketPairs[Math.floor(Math.random() * bracketPairs.length)];
-    return `${pair.open}${inner}${pair.close}`;
-  });
+// 「〖...〗」だけを探して変換
+text = text.replace(/〖([^〗]+)〗/g, (match, inner) => {
+  const pair = bracketPairs[Math.floor(Math.random() * bracketPairs.length)];
+  return `${pair.open}${inner}${pair.close}`;
+});
 
   document.getElementById("rewriteOutput").value = text;
   updateCount();
