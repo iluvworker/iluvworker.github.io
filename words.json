@@ -83,6 +83,10 @@
     "triggers": ["JK", "女子高生", "女子校生"],
     "replacements": ["JK", "女子高生", "女子校生"]
   },
+{
+    "triggers": ["ギャル", "GAL", "ビッチ", "淫乱DQN", "ヤリマン", "小悪魔"],
+    "replacements": []
+  },
   {
     "triggers": ["|", "×", "★"],
     "replacements": ["|", "×", "★"]
