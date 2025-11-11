@@ -79,6 +79,10 @@
     "triggers": ["旦那", "主人", "夫"],
     "replacements": ["旦那", "主人", "夫"]
   },
+{
+    "triggers": ["JK", "女子高生", "女子校生"],
+    "replacements": []
+  },
   {
     "triggers": ["|", "×", "★"],
     "replacements": ["|", "×", "★"]
