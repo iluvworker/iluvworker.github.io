@@ -43,36 +43,37 @@ fetch("words.json")
   .then(data => { synonyms = data; })
   .catch(err => console.error("辞書読み込み失敗:", err));
 
-/* ランダム言い換え */
+function escapeRegExp(str){
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function generateRandomRewrite() {
   let text = document.getElementById("titleInput").value;
 
-  // ゼロ幅スペース・不可視文字を削除
+  // ゼロ幅スペース等を除去（安全策）
   text = text.replace(/[\u200B-\u200D\uFEFF]/g, "");
 
-  // 単語をランダムで言い換え
+  // 単語/記号のランダム言い換え（キーは必ずエスケープ！）
   for (const [key, vals] of Object.entries(synonyms)) {
     if (Array.isArray(vals)) {
-      const regex = new RegExp(key, "g");
-      if (regex.test(text)) {
-        const random = vals[Math.floor(Math.random() * vals.length)];
-        text = text.replace(regex, random);
+      const pattern = new RegExp(escapeRegExp(key), "g");
+      if (pattern.test(text)) {
+        const rep = vals[Math.floor(Math.random() * vals.length)];
+        text = text.replace(pattern, rep);
       }
     }
   }
 
-  // 「〖〗」をランダムな括弧ペアに置換（中身を壊さず）
+  // 〖…〗 → 〈〉 / 《》 / 【】 / 〚〛 のどれかへランダム括弧変換
   const bracketPairs = [
     { open: "〈", close: "〉" },
     { open: "《", close: "》" },
     { open: "【", close: "】" },
     { open: "〚", close: "〛" }
   ];
-
-  // 「〖...〗」だけを対象にして安全変換
-  text = text.replace(/〖([^〗]+)〗/gu, (match, inner) => {
-    const pair = bracketPairs[Math.floor(Math.random() * bracketPairs.length)];
-    return `${pair.open}${inner}${pair.close}`;
+  text = text.replace(/〖([^〗]+)〗/gu, (_, inner) => {
+    const p = bracketPairs[Math.floor(Math.random()*bracketPairs.length)];
+    return `${p.open}${inner}${p.close}`;
   });
 
   document.getElementById("rewriteOutput").value = text;
