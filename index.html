@@ -44,35 +44,46 @@ fetch("words.json")
   .catch(err => console.error("辞書読み込み失敗:", err));
 
 /* ランダム言い換え */
-function generateRandomRewrite(){
+function generateRandomRewrite() {
   let text = document.getElementById("titleInput").value;
-  for(const [key, vals] of Object.entries(synonyms)){
-    const regex = new RegExp(key, "g");
-    if(regex.test(text)){
-      const random = vals[Math.floor(Math.random()*vals.length)];
-      text = text.replace(regex, random);
+
+  // 単語をランダムで言い換え
+  for (const [key, vals] of Object.entries(synonyms)) {
+    if (Array.isArray(vals)) {
+      const regex = new RegExp(key, "g");
+      if (regex.test(text)) {
+        const random = vals[Math.floor(Math.random() * vals.length)];
+        text = text.replace(regex, random);
+      }
     }
-    // 記号変換を適用（中身保持）
-if (synonyms["記号変換"]) {
-  for (const [open, close] of Object.entries(synonyms["記号変換"])) {
-    const regex = new RegExp(open, "g");
-    text = text.replace(regex, close);
   }
-}
-  }
+
+  // 「〖〗」をランダムな括弧ペアに置換
+  const bracketPairs = [
+    { open: "〈", close: "〉" },
+    { open: "《", close: "》" },
+    { open: "【", close: "】" },
+    { open: "〚", close: "〛" }
+  ];
+
+  text = text.replace(/〖(.*?)〗/g, (match, inner) => {
+    const pair = bracketPairs[Math.floor(Math.random() * bracketPairs.length)];
+    return `${pair.open}${inner}${pair.close}`;
+  });
+
   document.getElementById("rewriteOutput").value = text;
   updateCount();
 }
 
 /* 文字数カウント */
-function updateCount(){
+function updateCount() {
   const val = document.getElementById("rewriteOutput").value;
   document.getElementById("rewriteCount").innerText = val.length;
 }
 document.getElementById("rewriteOutput").addEventListener("input", updateCount);
 
 /* タグ整形 */
-function replacePipes(){
+function replacePipes() {
   const input = document.getElementById("tagInput").value;
   const output = input.replace(/\s*\|\s*/g, " ").trim();
   document.getElementById("tagOutput").value = output;
@@ -80,9 +91,9 @@ function replacePipes(){
 }
 
 /* タグ数カウント */
-function updateTagCount(){
+function updateTagCount() {
   const val = document.getElementById("tagOutput").value.trim();
-  const tags = val ? val.split(/\s+/).filter(t => t.length>0) : [];
+  const tags = val ? val.split(/\s+/).filter(t => t.length > 0) : [];
   document.getElementById("tagCount").innerText = tags.length;
 }
 document.getElementById("tagOutput").addEventListener("input", updateTagCount);
