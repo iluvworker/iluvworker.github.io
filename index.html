@@ -49,15 +49,16 @@ function generateRandomRewrite() {
   // 全角スペースやゼロ幅除去
   text = text.replace(/[\u200B-\u200D\uFEFF]/g, "");
 
-  // グループ単位でランダム変換
-  synonymGroups.forEach(group => {
-    const triggers = group.triggers.map(escapeRegExp).join("|");
-    const regex = new RegExp(triggers, "g");
-    if (regex.test(text)) {
+  // グループ単位で処理するけど、トリガーごとに個別ランダム変換
+synonymGroups.forEach(group => {
+  group.triggers.forEach(trigger => {
+    const pattern = new RegExp(escapeRegExp(trigger), "g");
+    if (pattern.test(text)) {
       const rep = group.replacements[Math.floor(Math.random() * group.replacements.length)];
-      text = text.replace(regex, rep);
+      text = text.replace(pattern, rep);
     }
   });
+});
 
   // 括弧のランダム変換
  // すべての括弧パターンに対応してランダム変換
