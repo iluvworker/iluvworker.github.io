@@ -53,7 +53,18 @@
     取得ログ：<span id="urlLog"></span>
   </div>
 </div>
-
+  
+<div class="section">
+  <h2>③ ページHTMLからタグ＆サムネ抽出</h2>
+  <div class="label">
+    動画ページで「ページのソースを表示」→ 全選択コピーしてここに貼り付け
+  </div>
+  <textarea id="htmlInput" placeholder="ここにページHTMLをそのまま貼り付け"></textarea>
+  <button onclick="extractFromHtml()">解析する</button>
+  <div class="meta">サムネURL：<span id="thumbUrl">（ここに表示）</span></div>
+  <div class="meta">解析ログ：<span id="htmlLog"></span></div>
+</div>
+  
 <script>
 /* ▼ 言い換え用辞書 -------------------- */
 let synonymGroups = [];
@@ -176,6 +187,57 @@ async function fetchFromUrl() {
       "取得に失敗しました（CORSエラーの可能性あり。ダメな場合はページHTMLを手動コピペする案もあり）";
   } finally {
     btn.disabled = false;
+  }
+}
+  function extractFromHtml() {
+  const html = document.getElementById("htmlInput").value;
+  const log  = document.getElementById("htmlLog");
+
+  if (!html.trim()) {
+    log.textContent = "HTMLが空です";
+    return;
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+
+  // サムネ（og:image 優先）
+  let thumb =
+    doc.querySelector('meta[property="og:image"]')?.content ||
+    doc.querySelector('meta[name="twitter:image"]')?.content || "";
+
+  document.getElementById("thumbUrl").textContent =
+    thumb || "サムネ画像のURLは見つかりませんでした";
+
+  // タグ候補
+  let tags = [];
+
+  // meta keywords を優先
+  const kw = doc.querySelector('meta[name="keywords"],meta[name="Keywords"]');
+  if (kw && kw.content) {
+    tags = kw.content
+      .split(/[,\s]+/)
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+  }
+
+  // keywordsが無いときは、タグリンクっぽい要素から抽出
+  if (tags.length === 0) {
+    const tagNodes = doc.querySelectorAll(
+      'a[href*="keyword"], a[href*="genre"], .tag a, .c-tag__item a'
+    );
+    tags = Array.from(tagNodes)
+      .map(a => a.textContent.trim())
+      .filter(t => t.length > 0);
+  }
+
+  if (tags.length > 0) {
+    // ②のタグ整形欄にそのまま流し込み
+    document.getElementById("tagOutput").value = tags.join(" ");
+    updateTagCount();
+    log.textContent = `タグ ${tags.length}個 抽出しました`;
+  } else {
+    log.textContent = "タグらしき文字列は見つかりませんでした";
   }
 }
 </script>
