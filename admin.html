@@ -1,288 +1,182 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      margin: 0;
-      height: 100vh;
-      background-color: #fff;
-      color: #000;
-    }
-    aside {
-      width: 200px;
-      background: #f5f5f5;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      border-right: 2px solid #ccc;
-    }
-    aside button {
-      background: #e0e0e0;
-      color: #000;
-      border: none;
-      padding: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      text-align: left;
-    }
-    aside button:hover { background: #d0d0d0; }
-    main {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    th, td {
-      border-bottom: 1px solid #ccc;
-      padding: 10px;
-      text-align: left;
-      vertical-align: middle;
-    }
-    img { width: 100px; border-radius: 4px; }
-    button.action-btn {
-      background: #0078d7;
-      border: none;
-      padding: 6px 10px;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button.delete-btn { background: #d9534f; }
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      background: #fff;
-      color: #000;
-    }
-    h3 { border-left: 4px solid #0078d7; padding-left: 8px; }
-    small { color: #666; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>投稿支援ツール</title>
+<meta name="robots" content="noindex,nofollow" />
+<style>
+  body {font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;background:#0f172a;color:#e6eef8;margin:0;padding:20px;}
+  h1{font-size:18px;margin-bottom:10px;}
+  h2{font-size:15px;margin:14px 0 6px;}
+  textarea{width:100%;border-radius:8px;border:none;padding:8px;background:#101c3b;color:#fff;margin-top:5px;font-size:14px;}
+  input[type="text"]{width:100%;border-radius:8px;border:none;padding:8px;background:#101c3b;color:#fff;font-size:14px;}
+  button{margin-top:6px;padding:6px 12px;border-radius:6px;border:none;background:#2563eb;color:white;cursor:pointer;}
+  button:disabled{opacity:.5;cursor:default;}
+  .counter{font-size:13px;color:#9fb7f8;margin-top:3px;text-align:right;}
+  .section{margin-bottom:26px;}
+  .meta{color:#9fb7f8;font-size:12px;margin-top:4px;word-break:break-all;}
+  .label{font-size:12px;color:#a5b4fc;}
+</style>
 </head>
 <body>
+<h1>投稿支援ツール（タイトル言い換え＋タグ整形＋URL抽出）</h1>
 
-  <aside>
-    <button onclick="showSection('postFormSection')">投稿画面</button>
-    <button onclick="showSection('postListSection')">投稿一覧</button>
-  </aside>
+<!-- ① タイトル言い換え -->
+<div class="section">
+  <h2>① タイトル言い換え</h2>
+  <textarea id="titleInput" placeholder="元のタイトルを入力"></textarea>
+  <button onclick="generateRandomRewrite()">ランダム言い換えを生成</button>
+  <textarea id="rewriteOutput" placeholder="ここに生成された言い換え文が出ます（編集可）"></textarea>
+  <div class="counter">文字数：<span id="rewriteCount">0</span></div>
+</div>
 
-  <main>
-    <!-- 投稿画面 -->
-    <section id="postFormSection">
-      <h3>新規投稿</h3>
-      <form id="postForm">
-        <label>販売サイトURL（FANZA / MGS）：</label>
-        <input type="url" id="workURL" placeholder="https://..." required />
+<!-- ② タグ整形 -->
+<div class="section">
+  <h2>② タグ整形</h2>
+  <textarea id="tagInput" placeholder="例: 巨乳 | ギャル | 人妻"></textarea>
+  <button onclick="replacePipes()">整形する</button>
+  <textarea id="tagOutput" placeholder="整形後のタグがここに出ます（編集可）"></textarea>
+  <div class="counter">タグ数：<span id="tagCount">0</span></div>
+</div>
 
-        <label>サムネURL：</label>
-        <input type="url" id="thumbURL" placeholder="https://..." required />
-
-        <label>動画URL：</label>
-        <input type="url" id="videoURL" placeholder="https://..." required />
-
-        <button type="submit">登録</button>
-      </form>
-
-      <h3>投稿一覧（最新）</h3>
-      <table id="postTable">
-        <thead>
-          <tr>
-            <th>サムネ</th>
-            <th>作品URL</th>
-            <th>動画</th>
-            <th>投稿日</th> 
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-    <!-- 投稿一覧 -->
-    <section id="postListSection" style="display:none;">
-      <h3>投稿一覧</h3>
-      <table id="allPostsTable">
-        <thead>
-          <tr>
-            <th>サムネ</th>
-            <th>作品URL</th>
-            <th>動画</th>
-            <th>投稿日</th> 
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-  </main>
+<!-- ③ URLからタグ＆サムネ抽出 -->
+<div class="section">
+  <h2>③ URLからタグ＆サムネ抽出（β）</h2>
+  <div class="label">動画ページのURLを貼り付け → 「取得」</div>
+  <input id="urlInput" type="text" placeholder="https://www.example.com/..." />
+  <button id="urlBtn" onclick="fetchFromUrl()">タグ＆サムネ取得</button>
+  <div class="meta">
+    サムネURL：<span id="thumbUrl">（ここに表示）</span>
+  </div>
+  <div class="meta">
+    取得ログ：<span id="urlLog"></span>
+  </div>
+</div>
 
 <script>
-const REPO_OWNER = "iluvworker";
-const REPO_NAME = "iluvworker.github.io";
-const FILE_PATH = "posts.json";
+/* ▼ 言い換え用辞書 -------------------- */
+let synonymGroups = [];
 
-let posts = [];
+fetch("words.json")
+  .then(res => res.json())
+  .then(data => { synonymGroups = data; })
+  .catch(err => console.error("辞書読み込み失敗:", err));
 
-// ==============================
-// セクション切替
-// ==============================
-function showSection(id) {
-  document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
-  document.getElementById(id).style.display = 'block';
-  sessionStorage.setItem('lastSection', id);
-}
+/* ▼ ① ランダム言い換え ---------------- */
+function generateRandomRewrite() {
+  let text = document.getElementById("titleInput").value;
+  text = text.replace(/[\u200B-\u200D\uFEFF]/g, "");
 
-window.addEventListener('load', () => {
-  const last = sessionStorage.getItem('lastSection') || 'postFormSection';
-  showSection(last);
-  initializePosts();
-});
-
-// ==============================
-// データ初期化
-// ==============================
-async function initializePosts() {
-  const localData = localStorage.getItem('pendingPosts');
-  if (localData) {
-    posts = JSON.parse(localData);
-    renderPosts();
-  }
-  await loadFromGitHub();
-}
-
-// ==============================
-// GitHubから読み込み
-// ==============================
-async function loadFromGitHub() {
-  try {
-    const res = await fetch(`https://${REPO_OWNER}.github.io/posts.json?_=${Date.now()}`);
-    if (res.ok) {
-      const remoteData = await res.json();
-      // マージ（重複回避）
-      const urls = new Set(posts.map(p => p.url));
-      const merged = [...remoteData, ...posts.filter(p => !urls.has(p.url))];
-      posts = merged;
-      renderPosts();
-      localStorage.setItem('pendingPosts', JSON.stringify(posts));
+  synonymGroups.forEach(group => {
+    const triggers = group.triggers.map(escapeRegExp).join("|");
+    const regex = new RegExp(triggers, "g");
+    if (regex.test(text)) {
+      const rep = group.replacements[Math.floor(Math.random() * group.replacements.length)];
+      text = text.replace(regex, rep);
     }
-  } catch (err) {
-    console.warn("GitHubからの読み込みエラー:", err);
-  }
+  });
+
+  const bracketPairs = [
+    { open: "〈", close: "〉" },
+    { open: "《", close: "》" },
+    { open: "【", close: "】" },
+    { open: "〚", close: "〛" }
+  ];
+  text = text.replace(/〖([^〗]+)〗/gu, (_, inner) => {
+    const p = bracketPairs[Math.floor(Math.random() * bracketPairs.length)];
+    return `${p.open}${inner}${p.close}`;
+  });
+
+  document.getElementById("rewriteOutput").value = text;
+  updateCount();
 }
 
-// ==============================
-// ワークフロー起動
-// ==============================
-async function triggerWorkflow() {
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/* ▼ 文字数カウント --------------------- */
+function updateCount() {
+  const val = document.getElementById("rewriteOutput").value;
+  document.getElementById("rewriteCount").innerText = val.length;
+}
+document.getElementById("rewriteOutput").addEventListener("input", updateCount);
+
+/* ▼ ② タグ整形 ------------------------ */
+function replacePipes() {
+  const input = document.getElementById("tagInput").value;
+  const output = input.replace(/\s*\|\s*/g, " ").trim();
+  document.getElementById("tagOutput").value = output;
+  updateTagCount();
+}
+
+/* ▼ タグ数カウント -------------------- */
+function updateTagCount() {
+  const val = document.getElementById("tagOutput").value.trim();
+  const tags = val ? val.split(/\s+/).filter(t => t.length > 0) : [];
+  document.getElementById("tagCount").innerText = tags.length;
+}
+document.getElementById("tagOutput").addEventListener("input", updateTagCount);
+
+/* ▼ ③ URLからタグ＆サムネ抽出 --------- */
+async function fetchFromUrl() {
+  const url = document.getElementById("urlInput").value.trim();
+  const log = document.getElementById("urlLog");
+  const btn = document.getElementById("urlBtn");
+  if (!url) return;
+
+  log.textContent = "取得中…";
+  btn.disabled = true;
+
   try {
-    await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/update-posts.yml/dispatches`, {
-      method: "POST",
-      headers: { "Accept": "application/vnd.github+json" },
-      body: JSON.stringify({ ref: "main" })
-    });
-    console.log("GitHub Actions triggered");
+    const res = await fetch(url, { mode: "cors" });
+    const html = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+
+    // サムネ（og:image 優先）
+    let thumb =
+      doc.querySelector('meta[property="og:image"]')?.content ||
+      doc.querySelector('meta[name="twitter:image"]')?.content || "";
+
+    document.getElementById("thumbUrl").textContent =
+      thumb || "見つかりませんでした";
+
+    // キーワード系（meta keywords → タグリンク）
+    let tags = [];
+    const kw = doc.querySelector('meta[name="keywords"],meta[name="Keywords"]');
+    if (kw && kw.content) {
+      tags = kw.content
+        .split(/[,\s]+/)
+        .map(t => t.trim())
+        .filter(t => t.length > 0);
+    }
+
+    if (tags.length === 0) {
+      // 汎用的なタグ候補（サイトによってここは好きに調整してOK）
+      const tagNodes = doc.querySelectorAll(
+        'a[href*="keyword"], a[href*="genre"], .tag a, .c-tag__item a'
+      );
+      tags = Array.from(tagNodes)
+        .map(a => a.textContent.trim())
+        .filter(t => t.length > 0);
+    }
+
+    if (tags.length > 0) {
+      document.getElementById("tagOutput").value = tags.join(" ");
+      updateTagCount();
+      log.textContent = `タグ ${tags.length}個を取得しました`;
+    } else {
+      log.textContent = "タグらしき情報が見つかりませんでした（サイト側の構造による）";
+    }
   } catch (e) {
-    console.error("ワークフロー起動失敗:", e);
+    console.error(e);
+    log.textContent =
+      "取得に失敗しました（CORSエラーの可能性あり。ダメな場合はページHTMLを手動コピペする案もあり）";
+  } finally {
+    btn.disabled = false;
   }
-}
-
-// ==============================
-// 投稿追加
-// ==============================
-document.getElementById('postForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const workURL = workURLInput.value.trim();
-  const thumbURL = thumbURLInput.value.trim();
-  const videoURL = videoURLInput.value.trim();
-
-  const newPost = {
-    site: detectSiteName(workURL),
-    url: workURL,
-    thumb: thumbURL,
-    video: videoURL,
-    date: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
-  };
-
-  posts.push(newPost);
-  renderPosts();
-  localStorage.setItem('pendingPosts', JSON.stringify(posts));
-  await triggerWorkflow();
-
-  alert("投稿データを送信しました。反映まで数分お待ちください。");
-  e.target.reset();
-});
-
-// ==============================
-// 削除機能
-// ==============================
-async function deletePost(i) {
-  if (!confirm("本当に削除しますか？")) return;
-  posts.splice(i, 1);
-  renderPosts();
-  localStorage.setItem('pendingPosts', JSON.stringify(posts));
-  await triggerWorkflow();
-  alert("削除しました（反映まで数分かかります）");
-}
-
-// ==============================
-// 投稿追加（修正版）
-// ==============================
-const postForm = document.getElementById('postForm');
-const workURLInput = document.getElementById('workURL');
-const thumbURLInput = document.getElementById('thumbURL');
-const videoURLInput = document.getElementById('videoURL');
-
-postForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const workURL = workURLInput.value.trim();
-  const thumbURL = thumbURLInput.value.trim();
-  const videoURL = videoURLInput.value.trim();
-
-  if (!workURL || !thumbURL || !videoURL) {
-    alert("全ての項目を入力してください。");
-    return;
-  }
-
-  const newPost = {
-    site: detectSiteName(workURL),
-    url: workURL,
-    thumb: thumbURL,
-    video: videoURL,
-    date: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
-  };
-
-  // 追加して保存
-  posts.push(newPost);
-  localStorage.setItem('pendingPosts', JSON.stringify(posts));
-  renderPosts();
-
-  // GitHub Actionsトリガー
-  try {
-    await triggerWorkflow();
-    alert("投稿データを送信しました。反映まで数分お待ちください。");
-  } catch (err) {
-    console.error("投稿エラー:", err);
-    alert("投稿処理中にエラーが発生しました。コンソールを確認してください。");
-  }
-
-  postForm.reset();
-});
-
-function editPost(i) {
-  alert(`編集モード（仮）: ${posts[i].url}`);
 }
 </script>
 </body>
