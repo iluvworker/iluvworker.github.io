@@ -111,22 +111,54 @@ function randomInt(min, max){
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function randomInt(min, max){
+  min = Math.floor(min);
+  max = Math.floor(max);
+  if(max < min){ [min, max] = [max, min]; }
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomPick(arr){
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function generateOnce(){
   const base      = document.getElementById("baseText").value || "";
   const targetLen = Number(document.getElementById("targetLen").value || 16);
   const repeatMax = Number(document.getElementById("repeatMax").value || 3);
   const dotsMax   = Number(document.getElementById("dotsMax").value || 0);
 
-  // 「伸ばす対象」の母音たち（大文字・小文字）
-  const vowelRegex = /[あいうえおぁぃぅぇぉアイウエオァィゥェォ]/u;
+  // 「伸ばす対象」の母音（ここではひらがなだけに絞る）
+  const vowelRegex = /[あいうえおぁぃぅぇぉ]/u;
+
+  // 大文字⇔小文字の候補テーブル
+  const vowelMap = {
+    "あ": ["あ", "ぁ"],
+    "い": ["い", "ぃ"],
+    "う": ["う", "ぅ"],
+    "え": ["え", "ぇ"],
+    "お": ["お", "ぉ"],
+    "ぁ": ["ぁ"],
+    "ぃ": ["ぃ"],
+    "ぅ": ["ぅ"],
+    "ぇ": ["ぇ"],
+    "ぉ": ["ぉ"]
+  };
 
   let out = "";
 
   for(const ch of base){
     if(vowelRegex.test(ch)){
-      // 母音だったらランダム回数で伸ばす
+      // この母音用の候補（大＆小）
+      const candidates = vowelMap[ch] || [ch];
+
+      // 何文字分伸ばすか
       const r = randomInt(1, repeatMax);
-      out += ch.repeat(r);
+
+      // その回数ぶん、大文字or小文字をランダムで吐く
+      for(let i = 0; i < r; i++){
+        out += randomPick(candidates);
+      }
 
       // ランダムで「…」を 0〜dotsMax 個 挟む
       if(dotsMax > 0){
@@ -145,9 +177,6 @@ function generateOnce(){
       break;
     }
   }
-
-  // まだ短すぎる場合は、末尾側からもう一周なぞってもいいけど
-  // とりあえずはこのまま。必要ならここをループで足してもOK。
 
   const res = document.getElementById("resultText");
   res.value = out;
