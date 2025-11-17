@@ -97,20 +97,16 @@
 
 <section>
   <h2>③ 生成結果</h2>
-  <button onclick="generateOnce()">1回生成</button>
-  <button onclick="generateOnce();copyResult()">生成してコピー</button>
+  <button onclick="generateOnce()">声だけ1回生成</button>
+  <button onclick="generateOnce();copyResult()">声だけ生成してコピー</button>
+  <button onclick="generateWithMark()">《×》ガチャ付き生成</button>
+
   <textarea id="resultText" placeholder="ここに生成結果が出ます"></textarea>
   <div class="counter">文字数：<span id="resultLen">0</span></div>
 </section>
 
 <script>
-function randomInt(min, max){
-  min = Math.floor(min);
-  max = Math.floor(max);
-  if(max < min){ [min, max] = [max, min]; }
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
+// ランダム系ユーティリティ
 function randomInt(min, max){
   min = Math.floor(min);
   max = Math.floor(max);
@@ -122,16 +118,15 @@ function randomPick(arr){
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function generateOnce(){
+// ★ 母音＋「…」びよーん本体（文字列を返す）
+function makeMoanText(){
   const base      = document.getElementById("baseText").value || "";
   const targetLen = Number(document.getElementById("targetLen").value || 16);
   const repeatMax = Number(document.getElementById("repeatMax").value || 3);
   const dotsMax   = Number(document.getElementById("dotsMax").value || 0);
 
-  // 「伸ばす対象」の母音（ここではひらがなだけに絞る）
+  // 伸ばす対象：ひらがな母音＋小書き
   const vowelRegex = /[あいうえおぁぃぅぇぉ]/u;
-
-  // 大文字⇔小文字の候補テーブル
   const vowelMap = {
     "あ": ["あ", "ぁ"],
     "い": ["い", "ぃ"],
@@ -149,18 +144,15 @@ function generateOnce(){
 
   for(const ch of base){
     if(vowelRegex.test(ch)){
-      // この母音用の候補（大＆小）
       const candidates = vowelMap[ch] || [ch];
+      const r = randomInt(1, repeatMax); // 何文字分伸ばすか
 
-      // 何文字分伸ばすか
-      const r = randomInt(1, repeatMax);
-
-      // その回数ぶん、大文字or小文字をランダムで吐く
+      // 大文字／小文字をランダム混在で伸ばす
       for(let i = 0; i < r; i++){
         out += randomPick(candidates);
       }
 
-      // ランダムで「…」を 0〜dotsMax 個 挟む
+      // ランダムで「…」を挟む
       if(dotsMax > 0){
         const dotCount = randomInt(0, dotsMax);
         if(dotCount > 0){
@@ -168,27 +160,60 @@ function generateOnce(){
         }
       }
     }else{
-      // 母音以外（っ、♡、ん など）はそのまま
+      // っ・ん・♡ などはそのまま
       out += ch;
     }
 
-    // 目標よりだいぶ超えたら軽くカット
+    // 目標よりだいぶ超えたら軽く打ち切り
     if(out.length > targetLen + 4){
       break;
     }
   }
 
-  const res = document.getElementById("resultText");
-  res.value = out;
-  document.getElementById("resultLen").innerText = out.length;
+  return out;
 }
 
+// ★ 声だけ生成（今までのボタン用）
+function generateOnce(){
+  const text = makeMoanText();
+  const res = document.getElementById("resultText");
+  res.value = text;
+  document.getElementById("resultLen").innerText = text.length;
+}
+
+// 《×》ガチャ用：括弧ペア
+const bracketPairs = [
+  { open: "〈", close: "〉" },
+  { open: "《", close: "》" },
+  { open: "【", close: "】" },
+  { open: "〚", close: "〛" },
+  { open: "〖", close: "〗" }
+];
+
+// 《×》ガチャ用：中身の記号
+const markSymbols = ["|", "×", "★"];
+
+// ★ 《×》ガチャ付き生成
+function generateWithMark(){
+  const moan = makeMoanText();              // 中身をまず生成
+  const pair = randomPick(bracketPairs);    // 括弧ペアガチャ
+  const mark = randomPick(markSymbols);     // | / × / ★ ガチャ
+
+  const finalText = `${pair.open}${mark}${pair.close}『${moan}』`;
+
+  const res = document.getElementById("resultText");
+  res.value = finalText;
+  document.getElementById("resultLen").innerText = finalText.length;
+}
+
+// コピー
 function copyResult(){
   const res = document.getElementById("resultText");
   res.select();
   document.execCommand("copy");
 }
 
+// 手動編集時も文字数を更新
 document.getElementById("resultText").addEventListener("input", () => {
   document.getElementById("resultLen").innerText =
     document.getElementById("resultText").value.length;
