@@ -97,9 +97,10 @@
 
 <section>
   <h2>③ 生成結果</h2>
-  <button onclick="generateOnce()">声だけ1回生成</button>
-  <button onclick="generateOnce();copyResult()">声だけ生成してコピー</button>
-  <button onclick="generateWithMark()">《×》ガチャ付き生成</button>
+  <button onclick="generateWithMark();copyResult()">生成+⌘C</button>
+  <button onclick="generateWithMark()">生成</button>
+  <button onclick="generateOnce()">声だけ</button>
+  <button onclick="generateOnce();copyResult()">声だけ+⌘C</button>
 
   <textarea id="resultText" placeholder="ここに生成結果が出ます"></textarea>
   <div class="counter">文字数：<span id="resultLen">0</span></div>
