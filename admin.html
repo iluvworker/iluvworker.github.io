@@ -74,7 +74,7 @@
 <section>
   <h2>① ベース文字列</h2>
   <label for="baseText">記号や「っ」「ん」はそのまま／母音だけ伸ばします</label>
-  <textarea id="baseText">あっ♡あんっ♡</textarea>
+  <textarea id="baseText">『あっ♡あんっ♡』</textarea>
 </section>
 
 <section>
@@ -200,7 +200,7 @@ function generateWithMark(){
   const pair = randomPick(bracketPairs);    // 括弧ペアガチャ
   const mark = randomPick(markSymbols);     // | / × / ★ ガチャ
 
-  const finalText = `${pair.open}${mark}${pair.close}『${moan}』`;
+  const finalText = `${pair.open}${mark}${pair.close}${moan}`;
 
   const res = document.getElementById("resultText");
   res.value = finalText;
