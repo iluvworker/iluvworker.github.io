@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>んもうダメジェネレータ（語尾びよ〜ん）</title>
+<title>テキスト崩しジェネレータ</title>
 <meta name="robots" content="noindex,nofollow" />
 <style>
   body{
@@ -13,7 +13,7 @@
     margin:0;
     padding:20px;
   }
-  h1{font-size:18px;margin-bottom:8px;}
+  h1{font-size:18px;margin-bottom:10px;}
   h2{font-size:14px;margin:14px 0 4px;}
   label{font-size:12px;color:#9fb7f8;display:block;margin-top:6px;}
   textarea,input{
@@ -42,12 +42,6 @@
     color:#fff;
     margin-top:3px;
   }
-  .row{
-    display:flex;
-    flex-wrap:wrap;
-    gap:12px 20px;
-    margin-top:6px;
-  }
   button{
     margin-top:10px;
     margin-right:6px;
@@ -66,49 +60,41 @@
     text-align:right;
     margin-top:4px;
   }
+  .row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px 20px;
+    margin-top:6px;
+  }
 </style>
 </head>
 <body>
-<h1>んもうダメジェネレータ（語尾びよ〜ん）</h1>
+<h1>テキスト崩しジェネレータ</h1>
 
 <section>
-  <h2>① 元のセリフ</h2>
-  <label for="baseText">ベースのセリフ</label>
-  <textarea id="baseText" placeholder="例：もうダメ…"></textarea>
+  <h2>① ベース文字列</h2>
+  <label for="baseText">短いテキストを入力</label>
+  <textarea id="baseText" placeholder="例：ああ…♡"></textarea>
 </section>
 
 <section>
-  <h2>② 母音の伸ばし方</h2>
+  <h2>② パラメータ</h2>
   <div class="row">
     <div>
-      <label for="vowelMin">母音の最小伸ばし回数</label>
-      <input id="vowelMin" type="number" value="2" min="1" />
+      <label for="targetLen">目標文字数（だいたい）</label>
+      <input id="targetLen" type="number" value="10" min="4" />
     </div>
     <div>
-      <label for="vowelMax">母音の最大伸ばし回数</label>
-      <input id="vowelMax" type="number" value="5" min="1" />
+      <label for="vowelMax">同じ文字の最大連続回数</label>
+      <input id="vowelMax" type="number" value="4" min="1" />
     </div>
   </div>
+  <label for="extraChars">追加で混ぜたい記号たち（ランダム挿入）</label>
+  <input id="extraChars" type="text" value="♡…・" />
 </section>
 
 <section>
-  <h2>③ 語尾の「っ」と装飾</h2>
-  <div class="row">
-    <div>
-      <label for="tsuMin">語尾「っ」の最小回数</label>
-      <input id="tsuMin" type="number" value="0" min="0" />
-    </div>
-    <div>
-      <label for="tsuMax">語尾「っ」の最大回数</label>
-      <input id="tsuMax" type="number" value="3" min="0" />
-    </div>
-  </div>
-  <label for="tailText">末尾につける文字（例：…っ////）</label>
-  <input id="tailText" type="text" value="…っ////" />
-</section>
-
-<section>
-  <h2>④ 生成結果</h2>
+  <h2>③ 生成結果</h2>
   <button onclick="generateOnce()">1回生成</button>
   <button onclick="generateOnce();copyResult()">生成してコピー</button>
   <textarea id="resultText" placeholder="ここに生成結果が出ます"></textarea>
@@ -116,66 +102,66 @@
 </section>
 
 <script>
-  // 日本語の母音っぽい文字たち
-  const vowelRegex = /[あいうえおアイウエオぁぃぅぇぉァィゥェォー]/u;
+function randomInt(min, max){
+  min = Math.floor(min);
+  max = Math.floor(max);
+  if(max < min){ [min, max] = [max, min]; }
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-  function randomInt(min, max){
-    min = Math.max(1, Number(min));
-    max = Math.max(min, Number(max));
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+function randomPick(arr){
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function generateOnce(){
+  const base = document.getElementById("baseText").value || "";
+  const targetLen = Number(document.getElementById("targetLen").value || 10);
+  const vowelMax = Number(document.getElementById("vowelMax").value || 3);
+  const extra = (document.getElementById("extraChars").value || "").split("");
+
+  if(!base){
+    document.getElementById("resultText").value = "";
+    document.getElementById("resultLen").innerText = "0";
+    return;
   }
 
-  function generateOnce(){
-    const base = document.getElementById("baseText").value || "";
-    let vMin = Number(document.getElementById("vowelMin").value || 1);
-    let vMax = Number(document.getElementById("vowelMax").value || 1);
-    let tMin = Number(document.getElementById("tsuMin").value || 0);
-    let tMax = Number(document.getElementById("tsuMax").value || 0);
-    const tail = document.getElementById("tailText").value || "";
+  let out = "";
 
-    if(vMax < vMin){ [vMin, vMax] = [vMax, vMin]; }
-    if(tMax < tMin){ [tMin, tMax] = [tMax, tMin]; }
+  // ベースの文字をランダムに拾いながら増やす
+  while(out.length < targetLen){
+    const ch = base[randomInt(0, base.length - 1)];
 
-    let out = "";
-
-    // 1文字ずつ見て、母音ならランダム回数でびよ〜ん
-    for(const ch of base){
-      if(vowelRegex.test(ch)){
-        const repeat = randomInt(vMin, vMax);
-        out += ch.repeat(repeat);
-      }else{
-        out += ch;
-      }
+    // たまに追加記号も挟む
+    if(extra.length && Math.random() < 0.25){
+      out += randomPick(extra);
+      continue;
     }
 
-    // 語尾の「っ」
-    let tsuCount = 0;
-    if(tMax > 0){
-      tsuCount = randomInt(tMin, tMax);
-    }
-    if(tsuCount > 0){
-      out += "っ".repeat(tsuCount);
-    }
-
-    // 末尾装飾
-    out += tail;
-
-    const res = document.getElementById("resultText");
-    res.value = out;
-    document.getElementById("resultLen").innerText = out.length;
+    // 同じ文字を何回か連続で
+    const repeat = randomInt(1, vowelMax);
+    out += ch.repeat(repeat);
   }
 
-  function copyResult(){
-    const res = document.getElementById("resultText");
-    res.select();
-    document.execCommand("copy");
+  // 目標より大きくなりすぎたら少し切る（±2文字くらいの誤差は許容）
+  if(out.length > targetLen + 2){
+    out = out.slice(0, targetLen + 2);
   }
 
-  // 手動でいじったとき用の文字数カウント
-  document.getElementById("resultText").addEventListener("input", () => {
-    document.getElementById("resultLen").innerText =
-      document.getElementById("resultText").value.length;
-  });
+  const res = document.getElementById("resultText");
+  res.value = out;
+  document.getElementById("resultLen").innerText = out.length;
+}
+
+function copyResult(){
+  const res = document.getElementById("resultText");
+  res.select();
+  document.execCommand("copy");
+}
+
+document.getElementById("resultText").addEventListener("input", () => {
+  document.getElementById("resultLen").innerText =
+    document.getElementById("resultText").value.length;
+});
 </script>
 </body>
 </html>
