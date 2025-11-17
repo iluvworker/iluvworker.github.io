@@ -74,7 +74,7 @@
 <section>
   <h2>① ベース文字列</h2>
   <label for="baseText">記号や「っ」「ん」はそのまま／母音だけ伸ばします</label>
-  <textarea id="baseText">『あっ♡あんっ♡』</textarea>
+  <textarea id="baseText">『あっ♡あんッ/////』</textarea>
 </section>
 
 <section>
@@ -86,11 +86,11 @@
     </div>
     <div>
       <label for="repeatMax">同じ母音の最大連続回数</label>
-      <input id="repeatMax" type="number" value="5" min="1" />
+      <input id="repeatMax" type="number" value="4" min="1" />
     </div>
     <div>
       <label for="dotsMax">母音の後に付ける「…」最大個数</label>
-      <input id="dotsMax" type="number" value="4" min="0" />
+      <input id="dotsMax" type="number" value="2" min="0" />
     </div>
   </div>
 </section>
@@ -166,9 +166,10 @@ function makeMoanText(){
     }
 
     // 目標よりだいぶ超えたら軽く打ち切り
-    if(out.length > targetLen + 4){
-      break;
-    }
+    // targetLen をそのまま上限にする
+if(out.length > targetLen){
+  break;
+}
   }
 
   return out;
