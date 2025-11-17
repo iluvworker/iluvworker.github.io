@@ -3,243 +3,179 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>投稿支援ツール</title>
+<title>んもうダメジェネレータ（語尾びよ〜ん）</title>
 <meta name="robots" content="noindex,nofollow" />
 <style>
-  body {font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;background:#0f172a;color:#e6eef8;margin:0;padding:20px;}
-  h1{font-size:18px;margin-bottom:10px;}
-  h2{font-size:15px;margin:14px 0 6px;}
-  textarea{width:100%;border-radius:8px;border:none;padding:8px;background:#101c3b;color:#fff;margin-top:5px;font-size:14px;}
-  input[type="text"]{width:100%;border-radius:8px;border:none;padding:8px;background:#101c3b;color:#fff;font-size:14px;}
-  button{margin-top:6px;padding:6px 12px;border-radius:6px;border:none;background:#2563eb;color:white;cursor:pointer;}
-  button:disabled{opacity:.5;cursor:default;}
-  .counter{font-size:13px;color:#9fb7f8;margin-top:3px;text-align:right;}
-  .section{margin-bottom:26px;}
-  .meta{color:#9fb7f8;font-size:12px;margin-top:4px;word-break:break-all;}
-  .label{font-size:12px;color:#a5b4fc;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;
+    background:#0f172a;
+    color:#e6eef8;
+    margin:0;
+    padding:20px;
+  }
+  h1{font-size:18px;margin-bottom:8px;}
+  h2{font-size:14px;margin:14px 0 4px;}
+  label{font-size:12px;color:#9fb7f8;display:block;margin-top:6px;}
+  textarea,input{
+    font-family:inherit;
+    font-size:13px;
+  }
+  textarea{
+    width:100%;
+    box-sizing:border-box;
+    min-height:48px;
+    border-radius:8px;
+    border:none;
+    padding:6px 8px;
+    background:#101c3b;
+    color:#fff;
+    margin-top:3px;
+  }
+  input[type="number"],input[type="text"]{
+    box-sizing:border-box;
+    width:100%;
+    max-width:120px;
+    border-radius:6px;
+    border:none;
+    padding:4px 6px;
+    background:#101c3b;
+    color:#fff;
+    margin-top:3px;
+  }
+  .row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px 20px;
+    margin-top:6px;
+  }
+  button{
+    margin-top:10px;
+    margin-right:6px;
+    padding:6px 12px;
+    border-radius:6px;
+    border:none;
+    background:#2563eb;
+    color:#fff;
+    cursor:pointer;
+    font-size:13px;
+  }
+  button:hover{opacity:.9;}
+  .counter{
+    font-size:12px;
+    color:#9fb7f8;
+    text-align:right;
+    margin-top:4px;
+  }
 </style>
 </head>
 <body>
-<h1>投稿支援ツール（タイトル言い換え＋タグ整形＋URL抽出）</h1>
+<h1>んもうダメジェネレータ（語尾びよ〜ん）</h1>
 
-<!-- ① タイトル言い換え -->
-<div class="section">
-  <h2>① タイトル言い換え</h2>
-  <textarea id="titleInput" placeholder="元のタイトルを入力"></textarea>
-  <button onclick="generateRandomRewrite()">ランダム言い換えを生成</button>
-  <textarea id="rewriteOutput" placeholder="ここに生成された言い換え文が出ます（編集可）"></textarea>
-  <div class="counter">文字数：<span id="rewriteCount">0</span></div>
-</div>
+<section>
+  <h2>① 元のセリフ</h2>
+  <label for="baseText">ベースのセリフ</label>
+  <textarea id="baseText" placeholder="例：もうダメ…"></textarea>
+</section>
 
-<!-- ② タグ整形 -->
-<div class="section">
-  <h2>② タグ整形</h2>
-  <textarea id="tagInput" placeholder="例: 巨乳 | ギャル | 人妻"></textarea>
-  <button onclick="replacePipes()">整形する</button>
-  <textarea id="tagOutput" placeholder="整形後のタグがここに出ます（編集可）"></textarea>
-  <div class="counter">タグ数：<span id="tagCount">0</span></div>
-</div>
+<section>
+  <h2>② 母音の伸ばし方</h2>
+  <div class="row">
+    <div>
+      <label for="vowelMin">母音の最小伸ばし回数</label>
+      <input id="vowelMin" type="number" value="2" min="1" />
+    </div>
+    <div>
+      <label for="vowelMax">母音の最大伸ばし回数</label>
+      <input id="vowelMax" type="number" value="5" min="1" />
+    </div>
+  </div>
+</section>
 
-<!-- ③ URLからタグ＆サムネ抽出 -->
-<div class="section">
-  <h2>③ URLからタグ＆サムネ抽出（β）</h2>
-  <div class="label">動画ページのURLを貼り付け → 「取得」</div>
-  <input id="urlInput" type="text" placeholder="https://www.example.com/..." />
-  <button id="urlBtn" onclick="fetchFromUrl()">タグ＆サムネ取得</button>
-  <div class="meta">
-    サムネURL：<span id="thumbUrl">（ここに表示）</span>
+<section>
+  <h2>③ 語尾の「っ」と装飾</h2>
+  <div class="row">
+    <div>
+      <label for="tsuMin">語尾「っ」の最小回数</label>
+      <input id="tsuMin" type="number" value="0" min="0" />
+    </div>
+    <div>
+      <label for="tsuMax">語尾「っ」の最大回数</label>
+      <input id="tsuMax" type="number" value="3" min="0" />
+    </div>
   </div>
-  <div class="meta">
-    取得ログ：<span id="urlLog"></span>
-  </div>
-</div>
-  
-<div class="section">
-  <h2>③ ページHTMLからタグ＆サムネ抽出</h2>
-  <div class="label">
-    動画ページで「ページのソースを表示」→ 全選択コピーしてここに貼り付け
-  </div>
-  <textarea id="htmlInput" placeholder="ここにページHTMLをそのまま貼り付け"></textarea>
-  <button onclick="extractFromHtml()">解析する</button>
-  <div class="meta">サムネURL：<span id="thumbUrl">（ここに表示）</span></div>
-  <div class="meta">解析ログ：<span id="htmlLog"></span></div>
-</div>
-  
+  <label for="tailText">末尾につける文字（例：…っ////）</label>
+  <input id="tailText" type="text" value="…っ////" />
+</section>
+
+<section>
+  <h2>④ 生成結果</h2>
+  <button onclick="generateOnce()">1回生成</button>
+  <button onclick="generateOnce();copyResult()">生成してコピー</button>
+  <textarea id="resultText" placeholder="ここに生成結果が出ます"></textarea>
+  <div class="counter">文字数：<span id="resultLen">0</span></div>
+</section>
+
 <script>
-/* ▼ 言い換え用辞書 -------------------- */
-let synonymGroups = [];
+  // 日本語の母音っぽい文字たち
+  const vowelRegex = /[あいうえおアイウエオぁぃぅぇぉァィゥェォー]/u;
 
-fetch("words.json")
-  .then(res => res.json())
-  .then(data => { synonymGroups = data; })
-  .catch(err => console.error("辞書読み込み失敗:", err));
+  function randomInt(min, max){
+    min = Math.max(1, Number(min));
+    max = Math.max(min, Number(max));
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
 
-/* ▼ ① ランダム言い換え ---------------- */
-function generateRandomRewrite() {
-  let text = document.getElementById("titleInput").value;
-  text = text.replace(/[\u200B-\u200D\uFEFF]/g, "");
+  function generateOnce(){
+    const base = document.getElementById("baseText").value || "";
+    let vMin = Number(document.getElementById("vowelMin").value || 1);
+    let vMax = Number(document.getElementById("vowelMax").value || 1);
+    let tMin = Number(document.getElementById("tsuMin").value || 0);
+    let tMax = Number(document.getElementById("tsuMax").value || 0);
+    const tail = document.getElementById("tailText").value || "";
 
-  synonymGroups.forEach(group => {
-    const triggers = group.triggers.map(escapeRegExp).join("|");
-    const regex = new RegExp(triggers, "g");
-    if (regex.test(text)) {
-      const rep = group.replacements[Math.floor(Math.random() * group.replacements.length)];
-      text = text.replace(regex, rep);
+    if(vMax < vMin){ [vMin, vMax] = [vMax, vMin]; }
+    if(tMax < tMin){ [tMin, tMax] = [tMax, tMin]; }
+
+    let out = "";
+
+    // 1文字ずつ見て、母音ならランダム回数でびよ〜ん
+    for(const ch of base){
+      if(vowelRegex.test(ch)){
+        const repeat = randomInt(vMin, vMax);
+        out += ch.repeat(repeat);
+      }else{
+        out += ch;
+      }
     }
+
+    // 語尾の「っ」
+    let tsuCount = 0;
+    if(tMax > 0){
+      tsuCount = randomInt(tMin, tMax);
+    }
+    if(tsuCount > 0){
+      out += "っ".repeat(tsuCount);
+    }
+
+    // 末尾装飾
+    out += tail;
+
+    const res = document.getElementById("resultText");
+    res.value = out;
+    document.getElementById("resultLen").innerText = out.length;
+  }
+
+  function copyResult(){
+    const res = document.getElementById("resultText");
+    res.select();
+    document.execCommand("copy");
+  }
+
+  // 手動でいじったとき用の文字数カウント
+  document.getElementById("resultText").addEventListener("input", () => {
+    document.getElementById("resultLen").innerText =
+      document.getElementById("resultText").value.length;
   });
-
-  const bracketPairs = [
-    { open: "〈", close: "〉" },
-    { open: "《", close: "》" },
-    { open: "【", close: "】" },
-    { open: "〚", close: "〛" }
-  ];
-  text = text.replace(/〖([^〗]+)〗/gu, (_, inner) => {
-    const p = bracketPairs[Math.floor(Math.random() * bracketPairs.length)];
-    return `${p.open}${inner}${p.close}`;
-  });
-
-  document.getElementById("rewriteOutput").value = text;
-  updateCount();
-}
-
-function escapeRegExp(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-/* ▼ 文字数カウント --------------------- */
-function updateCount() {
-  const val = document.getElementById("rewriteOutput").value;
-  document.getElementById("rewriteCount").innerText = val.length;
-}
-document.getElementById("rewriteOutput").addEventListener("input", updateCount);
-
-/* ▼ ② タグ整形 ------------------------ */
-function replacePipes() {
-  const input = document.getElementById("tagInput").value;
-  const output = input.replace(/\s*\|\s*/g, " ").trim();
-  document.getElementById("tagOutput").value = output;
-  updateTagCount();
-}
-
-/* ▼ タグ数カウント -------------------- */
-function updateTagCount() {
-  const val = document.getElementById("tagOutput").value.trim();
-  const tags = val ? val.split(/\s+/).filter(t => t.length > 0) : [];
-  document.getElementById("tagCount").innerText = tags.length;
-}
-document.getElementById("tagOutput").addEventListener("input", updateTagCount);
-
-/* ▼ ③ URLからタグ＆サムネ抽出 --------- */
-async function fetchFromUrl() {
-  const url = document.getElementById("urlInput").value.trim();
-  const log = document.getElementById("urlLog");
-  const btn = document.getElementById("urlBtn");
-  if (!url) return;
-
-  log.textContent = "取得中…";
-  btn.disabled = true;
-
-  try {
-    const res = await fetch(url, { mode: "cors" });
-    const html = await res.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-
-    // サムネ（og:image 優先）
-    let thumb =
-      doc.querySelector('meta[property="og:image"]')?.content ||
-      doc.querySelector('meta[name="twitter:image"]')?.content || "";
-
-    document.getElementById("thumbUrl").textContent =
-      thumb || "見つかりませんでした";
-
-    // キーワード系（meta keywords → タグリンク）
-    let tags = [];
-    const kw = doc.querySelector('meta[name="keywords"],meta[name="Keywords"]');
-    if (kw && kw.content) {
-      tags = kw.content
-        .split(/[,\s]+/)
-        .map(t => t.trim())
-        .filter(t => t.length > 0);
-    }
-
-    if (tags.length === 0) {
-      // 汎用的なタグ候補（サイトによってここは好きに調整してOK）
-      const tagNodes = doc.querySelectorAll(
-        'a[href*="keyword"], a[href*="genre"], .tag a, .c-tag__item a'
-      );
-      tags = Array.from(tagNodes)
-        .map(a => a.textContent.trim())
-        .filter(t => t.length > 0);
-    }
-
-    if (tags.length > 0) {
-      document.getElementById("tagOutput").value = tags.join(" ");
-      updateTagCount();
-      log.textContent = `タグ ${tags.length}個を取得しました`;
-    } else {
-      log.textContent = "タグらしき情報が見つかりませんでした（サイト側の構造による）";
-    }
-  } catch (e) {
-    console.error(e);
-    log.textContent =
-      "取得に失敗しました（CORSエラーの可能性あり。ダメな場合はページHTMLを手動コピペする案もあり）";
-  } finally {
-    btn.disabled = false;
-  }
-}
-  function extractFromHtml() {
-  const html = document.getElementById("htmlInput").value;
-  const log  = document.getElementById("htmlLog");
-
-  if (!html.trim()) {
-    log.textContent = "HTMLが空です";
-    return;
-  }
-
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
-
-  // サムネ（og:image 優先）
-  let thumb =
-    doc.querySelector('meta[property="og:image"]')?.content ||
-    doc.querySelector('meta[name="twitter:image"]')?.content || "";
-
-  document.getElementById("thumbUrl").textContent =
-    thumb || "サムネ画像のURLは見つかりませんでした";
-
-  // タグ候補
-  let tags = [];
-
-  // meta keywords を優先
-  const kw = doc.querySelector('meta[name="keywords"],meta[name="Keywords"]');
-  if (kw && kw.content) {
-    tags = kw.content
-      .split(/[,\s]+/)
-      .map(t => t.trim())
-      .filter(t => t.length > 0);
-  }
-
-  // keywordsが無いときは、タグリンクっぽい要素から抽出
-  if (tags.length === 0) {
-    const tagNodes = doc.querySelectorAll(
-      'a[href*="keyword"], a[href*="genre"], .tag a, .c-tag__item a'
-    );
-    tags = Array.from(tagNodes)
-      .map(a => a.textContent.trim())
-      .filter(t => t.length > 0);
-  }
-
-  if (tags.length > 0) {
-    // ②のタグ整形欄にそのまま流し込み
-    document.getElementById("tagOutput").value = tags.join(" ");
-    updateTagCount();
-    log.textContent = `タグ ${tags.length}個 抽出しました`;
-  } else {
-    log.textContent = "タグらしき文字列は見つかりませんでした";
-  }
-}
 </script>
 </body>
 </html>
